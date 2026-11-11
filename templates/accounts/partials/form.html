@@ -1,0 +1,9 @@
+<form method="post" class="auth-form" novalidate>
+  {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  {% if form.non_field_errors %}
+  <div class="auth-errors" role="alert">{{ form.non_field_errors }}</div>
+  {% endif %}
+  {% for field in form %}{% include "components/form_field.html" with field=field only %}{% endfor %}
+  <button class="button button-primary auth-submit" type="submit">{{ submit_label }} <span aria-hidden="true">&rarr;</span></button>
+</form>

@@ -16,11 +16,12 @@ uv run django-admin startapp tasks
 
 - `config/`: settings and root URLs.
 - `core/`: foundation page, database health endpoint, and HTMX status partial.
-- `accounts/`: email-based user model and Django admin forms.
+- `accounts/`: email-based users, registration, session login/logout, and Django admin forms.
 - `projects/`: projects and project-scoped admin/member memberships.
 - `tasks/`: assigned tasks, priorities, Kanban statuses, ordering, and completion timestamps.
 - `templates/base.html`: shared document, styles, scripts, messages, and HTMX CSRF header.
 - `templates/components/`: reusable brand, messages, and form-field includes.
+- `templates/accounts/`: shared authentication layout and form/logout partials.
 - `templates/core/partials/`: small HTML fragments reused by full pages and HTMX responses.
 - `static/`: application CSS and locally served HTMX 2.0.11, including its license.
 - `index.html` and `assets/`: original approved Kanban design, unchanged.
@@ -49,7 +50,7 @@ Requirements: Docker with Compose. Python dependencies are locked in `uv.lock`.
    docker compose exec django python manage.py migrate
    ```
 
-4. Open http://localhost:8001. The foundation page's connection button updates a reusable partial through HTMX. JSON health is at `/health/`.
+4. Open http://localhost:8001. Sign in or create an account to access the foundation page. Its connection button updates a reusable partial through HTMX. JSON health is at `/health/`.
 
 The custom email user is included in the first accounts migration. The original standalone design can still be previewed with `python -m http.server 8765 --bind 127.0.0.1`.
 
@@ -73,6 +74,14 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - Tasks belong to a project and record their creator, optional assignee, priority, deadline, status, board position, and timestamps. Assignees must be active members of that project. Completing/reopening a task sets/clears its completion timestamp.
 - Database constraints enforce email/membership uniqueness and valid priority, status, and role values. Use validated model saves or ModelForms for domain changes; bulk inserts/updates bypass validation and save hooks. Prefer deactivating accounts: project owners and task creators are protected from deletion.
 
-This checkpoint provides the models and schema, not project-role authorization views. No domain CRUD, authentication pages, real board, or chart has been implemented yet; the original design remains a reference rather than a completed Django screen.
+## Authentication
+
+- `/login/`: email/password sign-in, with safe same-origin return URLs.
+- `/register/`: first name, email, password, and confirmation; successful registration signs in a regular, non-staff user.
+- `/logout/`: POST only, submitted through the shared sign-out form.
+- Authentication uses Django's database-backed sessions and CSRF protection, with password validation and inline errors. Protected HTML is not cached.
+- `LoginRequiredMiddleware` protects application views by default. Login, registration, and the public database diagnostics (`/health/`, `/connection/`) are explicitly exempt; static files remain available.
+
+Project/task CRUD, project-role authorization views, a live Kanban board, and dashboard charts remain deferred. The original board design is unchanged and remains the reference for later screens.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.

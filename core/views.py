@@ -1,10 +1,13 @@
+from django.contrib.auth.decorators import login_not_required
 from django.db import DatabaseError, connection
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 
 @require_GET
+@never_cache
 def home(request):
     return render(request, "core/home.html")
 
@@ -19,6 +22,7 @@ def database_connected():
 
 
 @require_GET
+@login_not_required
 def health(request):
     connected = database_connected()
     return JsonResponse(
@@ -31,6 +35,7 @@ def health(request):
 
 
 @require_GET
+@login_not_required
 def connection_status(request):
     return render(
         request,

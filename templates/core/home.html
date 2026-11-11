@@ -2,11 +2,14 @@
 {% block title %}Stride · Project foundation{% endblock %}
 {% block content %}
 <main class="foundation">
-  <header>{% include "components/brand.html" %}</header>
+  <header class="workspace-header">
+    {% include "components/brand.html" %}
+    {% include "accounts/partials/logout.html" %}
+  </header>
   <section class="foundation-content">
     <p class="eyebrow">PROJECT FOUNDATION</p>
     <h1>Project foundation</h1>
-    <p>Django templates are ready. The original Kanban design is preserved in index.html.</p>
+    <p>Signed in as {{ request.user.email }}. The original Kanban design is preserved in index.html.</p>
     <form class="connection-panel" action="{% url 'core:connection' %}" method="get" hx-get="{% url 'core:connection' %}" hx-target="#connection-status" hx-swap="outerHTML">
       {% include "core/partials/connection_status.html" %}
       <button type="submit" class="button button-primary">Check connection</button>

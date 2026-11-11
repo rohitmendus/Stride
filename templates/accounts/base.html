@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
+{% block content %}
+<main class="auth-shell">
+  <aside class="auth-story" aria-label="Stride">
+    {% include "components/brand.html" %}
+    <div class="auth-story-copy">
+      <p class="auth-eyebrow">A LITTLE CLARITY GOES A LONG WAY</p>
+      <h2>Less scattered.<br>More in stride.</h2>
+      <p>A calmer place to move work forward.</p>
+    </div>
+    <p class="auth-story-footer">One thing at a time. Together.</p>
+  </aside>
+  <section class="auth-form-pane" aria-labelledby="auth-title">
+    <div class="auth-content">
+      <p class="auth-eyebrow">YOUR SPACE TO MAKE PROGRESS</p>
+      <h1 id="auth-title">{% block auth_heading %}{% endblock %}</h1>
+      <p class="auth-description">{% block auth_description %}{% endblock %}</p>
+      {% block auth_content %}{% endblock %}
+      <p class="auth-switch">{% block auth_switch %}{% endblock %}</p>
+    </div>
+  </section>
+</main>
+{% endblock %}

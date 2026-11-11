@@ -1,0 +1,6 @@
+{% extends "accounts/base.html" %}
+{% block title %}Create an account · Stride{% endblock %}
+{% block auth_heading %}Find your stride.{% endblock %}
+{% block auth_description %}Create an account. Make a little progress.{% endblock %}
+{% block auth_content %}{% include "accounts/partials/form.html" with submit_label="Create account" %}{% endblock %}
+{% block auth_switch %}Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>{% endblock %}

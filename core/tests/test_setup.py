@@ -1,11 +1,16 @@
 from unittest import TestCase
 
+from django.contrib.auth import get_user_model
 from django.db import connection
-from django.test import Client, SimpleTestCase
+from django.test import Client
+from django.test import TestCase as DjangoTestCase
 
 
-class TemplateTests(SimpleTestCase):
+class TemplateTests(DjangoTestCase):
     def test_home_uses_the_shared_layout_and_brand_partial(self):
+        self.client.force_login(
+            get_user_model().objects.create_user("viewer@example.com")
+        )
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "core/home.html")
