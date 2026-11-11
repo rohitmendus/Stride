@@ -1,0 +1,5 @@
+{% if messages %}
+<div class="site-messages">
+  {% for message in messages %}<p class="site-message" role="status">{{ message }}</p>{% endfor %}
+</div>
+{% endif %}

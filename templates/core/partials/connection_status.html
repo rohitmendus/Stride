@@ -1,0 +1,1 @@
+<span id="connection-status" class="connection-status{% if connected == True %} connected{% elif connected == False %} unavailable{% endif %}" role="status">{% if connected == True %}PostgreSQL connected{% elif connected == False %}PostgreSQL unavailable{% else %}Database not checked{% endif %}</span>
