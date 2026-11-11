@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f7f8fa" />
+    <meta name="theme-color" content="#244c3c" />
     <title>Stride · Project board</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="assets/styles.css" />
+    <link rel="stylesheet" href="assets/preview.css" />
     <script src="assets/board.js" defer></script>
   </head>
-  <body>
+  <body class="preview-board">
     <button
       class="mobile-scrim"
       id="scrim"
@@ -23,20 +23,10 @@
           >.</span
         ></a
       >
-      <div class="workspace">
-        <span class="workspace-mark">S</span>
-        <div>
-          <strong>Studio workspace</strong><span>Personal workspace</span>
-        </div>
-        <span class="icon" data-icon="chevron"></span>
-      </div>
-      <div class="nav-label">WORKSPACE</div>
+      <div class="nav-label">DEMO WORKSPACE</div>
       <nav>
         <button class="nav-item active" id="all-tasks" aria-pressed="true">
-          <span class="icon" data-icon="projects"></span>Projects<span
-            class="nav-count"
-            >1</span
-          >
+          <span class="icon" data-icon="projects"></span>All tasks
         </button>
         <button class="nav-item" id="my-tasks" aria-pressed="false">
           <span class="icon" data-icon="check"></span>My tasks<span
@@ -45,22 +35,17 @@
           ></span>
         </button>
       </nav>
-      <div class="nav-label projects-label">YOUR PROJECTS</div>
+      <div class="nav-label projects-label">DEMO BOARD</div>
       <button class="project-link" id="project-link">
         <span class="project-dot"></span>Stride launch
       </button>
-      <div class="sidebar-note">
-        <span class="tiny-label">A LITTLE MORE FOCUS.</span>
-        <p>Less busywork.<br />More moving forward.</p>
-        <span class="note-line"></span>
-      </div>
       <div class="sidebar-bottom">
         <button id="reset-demo" class="nav-item">
           <span class="icon" data-icon="reset"></span>Reset demo
         </button>
         <div class="profile">
           <span class="avatar avatar-green">AL</span>
-          <div><strong>Alex Lee</strong><span>Personal account</span></div>
+          <div><strong>Alex Lee</strong><span>Demo identity · My tasks</span></div>
           <span class="demo-pill">DEMO</span>
         </div>
       </div>
@@ -75,35 +60,17 @@
             aria-expanded="false"
           >
             <span class="icon" data-icon="menu"></span></button
-          ><span>Projects</span><span class="slash">/</span
-          ><strong>Stride launch</strong>
+          ><span>Workspace / Demo board</span>
         </div>
-        <span class="prototype-label"><span></span>Design preview</span>
+        <span class="prototype-label">Browser-local demo</span>
       </header>
       <section class="project-header">
         <div class="project-heading">
-          <span class="project-symbol"
-            ><span class="icon" data-icon="layers"></span
-          ></span>
-          <div>
-            <div class="eyebrow">LET’S MAKE IT HAPPEN</div>
-            <h1>Stride launch</h1>
-          </div>
+          <h1>Stride launch<span class="heading-dot" aria-hidden="true">.</span></h1>
         </div>
         <p class="project-description">
-          A thoughtful home for projects, people, and the work in between.
+          A little less noise. A clear next step.
         </p>
-        <div class="project-meta">
-          <div class="avatar-stack" aria-label="Demo team: Alex, Jamie, Morgan">
-            <span class="avatar avatar-green">AL</span
-            ><span class="avatar avatar-peach">JK</span
-            ><span class="avatar avatar-blue">MS</span>
-          </div>
-          <span>3 members</span><span class="meta-divider"></span
-          ><span class="icon" data-icon="calendar"></span
-          ><span>Nov 30, 2026</span
-          ><span class="project-status"><span></span>In progress</span>
-        </div>
       </section>
       <section class="work-area" aria-label="Project tasks">
         <div class="view-bar">
@@ -171,7 +138,7 @@
           <span
             ><span class="icon" data-icon="move"></span>Drag to move. Open a
             task to edit its details or status.</span
-          ><span id="save-status">Demo data · saved in this browser</span>
+          ><span id="save-status" aria-live="polite">Demo tasks · saved only in this browser</span>
         </footer>
       </section>
     </main>
@@ -234,7 +201,7 @@
           <button type="button" class="text-button danger" id="delete-task">
             Delete task
           </button>
-          <div class="flex gap-2">
+          <div class="dialog-save-actions">
             <button
               type="button"
               class="button button-white"
