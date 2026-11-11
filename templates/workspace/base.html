@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/workspace.css' %}">{% endblock %}
+{% block content %}
+<a class="skip-link" href="#main-content">Skip to content</a>
+<div class="app-shell" hx-boost="true" hx-push-url="true" hx-history="false" hx-swap="innerHTML show:top">
+  {% include "workspace/partials/sidebar.html" %}
+  <main class="app-main" id="main-content">
+    <header class="app-topbar"><a class="app-breadcrumb" href="{% url 'core:home' %}">Workspace <span aria-hidden="true">/</span> <strong>Projects</strong></a><span class="app-account">{{ request.user.email }}</span></header>
+    <div class="app-content"><div class="request-error" id="workspace-request-error" role="alert" hidden><span>We couldn’t confirm that change. Refresh this page before trying again.</span><button type="button" data-dismiss-request-error aria-label="Dismiss error">&times;</button></div>{% block workspace_content %}{% endblock %}</div>
+  </main>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script src="{% static 'js/workspace.js' %}" defer></script>{% endblock %}

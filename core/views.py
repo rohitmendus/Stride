@@ -5,11 +5,13 @@ from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from projects.views import project_list
+
 
 @require_GET
 @never_cache
 def home(request):
-    return render(request, "core/home.html")
+    return project_list(request)
 
 
 def database_connected():

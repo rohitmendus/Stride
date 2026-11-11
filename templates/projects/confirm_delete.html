@@ -1,0 +1,7 @@
+{% extends "workspace/base.html" %}
+{% block title %}Delete {{ project.title }} · Stride{% endblock %}
+{% block workspace_content %}
+<a class="app-back" href="{% url 'projects:detail' project.pk %}">&larr; Back to project</a>
+<div class="form-page delete-page"><p class="app-eyebrow">ONE LAST CHECK</p><h1>Delete this project?</h1><p>You’re about to delete <strong>{{ project.title }}</strong> and all its tasks. This cannot be undone.</p>
+<form method="post" hx-disabled-elt="find button[type='submit']">{% csrf_token %}<div class="form-actions"><a class="app-button secondary" href="{% url 'projects:detail' project.pk %}">Keep project</a><button class="app-button destructive" type="submit">Delete project</button></div></form></div>
+{% endblock %}

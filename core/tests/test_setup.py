@@ -13,10 +13,10 @@ class TemplateTests(DjangoTestCase):
         )
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "core/home.html")
+        self.assertTemplateUsed(response, "projects/index.html")
         self.assertTemplateUsed(response, "base.html")
         self.assertTemplateUsed(response, "components/brand.html")
-        self.assertContains(response, "Project foundation")
+        self.assertContains(response, "Your projects")
 
 
 class HealthTests(TestCase):

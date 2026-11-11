@@ -1,0 +1,10 @@
+{% extends "workspace/base.html" %}
+{% block title %}Your projects · Stride{% endblock %}
+{% block workspace_content %}
+<header class="page-heading"><div><p class="app-eyebrow">A LITTLE FOCUS. A LITTLE FORWARD.</p><h1>Your projects<span class="heading-dot">.</span></h1><p>A clear place for the work that matters.</p></div><a class="app-button primary" href="{% url 'projects:create' %}"><span aria-hidden="true">+</span> New project</a></header>
+{% if projects %}
+<div class="project-grid" aria-label="Your projects">{% for project in projects %}{% include "projects/partials/card.html" with project=project user=request.user only %}{% endfor %}</div>
+{% else %}
+<section class="app-empty"><h2>Good work starts somewhere.</h2><p>Create your first project. Keep the next step clear.</p><a class="app-button primary" href="{% url 'projects:create' %}">Create your first project <span aria-hidden="true">&rarr;</span></a></section>
+{% endif %}
+{% endblock %}

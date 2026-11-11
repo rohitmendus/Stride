@@ -1,0 +1,5 @@
+<a class="project-card" href="{% url 'projects:detail' project.pk %}">
+  <div class="project-card-top"><span class="project-letter" aria-hidden="true">{{ project.title|slice:":1"|upper }}</span><span class="role-tag">{% if project.owner_id == user.pk %}Owner{% else %}{{ project.current_role|title }}{% endif %}</span></div>
+  <h2>{{ project.title }}</h2><p>{{ project.description|default:"No description yet."|truncatechars:120 }}</p>
+  <div class="project-card-footer"><span>Due {{ project.deadline|date:"M j, Y" }}</span><span class="card-arrow" aria-hidden="true">&nearr;</span></div>
+</a>

@@ -1,0 +1,8 @@
+{% extends "workspace/base.html" %}
+{% block title %}{{ project.title }} · Stride{% endblock %}
+{% block workspace_content %}
+<a class="app-back" href="{% url 'core:home' %}">&larr; All projects</a>
+<header class="page-heading detail-heading"><div><p class="app-eyebrow">PROJECT OVERVIEW</p><h1>{{ project.title }}</h1></div><div class="project-actions">{% if project.owner_id == request.user.pk %}<a class="app-button danger-button" href="{% url 'projects:delete' project.pk %}">Delete project</a>{% endif %}{% if project.current_role == "admin" %}<a class="app-button secondary" href="{% url 'projects:edit' project.pk %}">Edit project <span aria-hidden="true">&nearr;</span></a>{% endif %}</div></header>
+<div class="project-overview"><section class="overview-main"><h2>A little context</h2><div class="project-copy">{{ project.description|default:"No description yet."|linebreaksbr }}</div><div class="project-facts"><div><span>Deadline</span><strong>{{ project.deadline|date:"M j, Y" }}</strong></div><div><span>Project owner</span><strong>{{ project.owner.get_full_name|default:project.owner.email }}</strong></div><div><span>Created</span><strong>{{ project.created_at|date:"M j, Y" }}</strong></div></div></section>
+<section class="project-team"><h2>The people behind it</h2>{% for membership in project.memberships.all %}<div class="team-person"><span class="app-avatar" aria-hidden="true">{{ membership.user.first_name|default:membership.user.email|slice:":1"|upper }}</span><div><strong>{{ membership.user.get_full_name|default:membership.user.email }}</strong><small>{% if membership.user_id == project.owner_id %}Owner{% else %}{{ membership.get_role_display }}{% endif %}</small></div></div>{% endfor %}</section></div>
+{% endblock %}

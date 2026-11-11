@@ -15,16 +15,17 @@ uv run django-admin startapp tasks
 ```
 
 - `config/`: settings and root URLs.
-- `core/`: foundation page, database health endpoint, and HTMX status partial.
+- `core/`: workspace entry point, database diagnostics, and HTMX-aware login protection.
 - `accounts/`: email-based users, registration, session login/logout, and Django admin forms.
-- `projects/`: projects and project-scoped admin/member memberships.
+- `projects/`: project CRUD, member-scoped access, and admin/member permissions.
 - `tasks/`: assigned tasks, priorities, Kanban statuses, ordering, and completion timestamps.
 - `templates/base.html`: shared document, styles, scripts, messages, and HTMX CSRF header.
 - `templates/components/`: reusable brand, messages, and form-field includes.
 - `templates/accounts/`: shared authentication layout and form/logout partials.
 - `templates/core/partials/`: small HTML fragments reused by full pages and HTMX responses.
 - `static/`: application CSS and locally served HTMX 2.0.11, including its license.
-- `index.html` and `assets/`: original approved Kanban design, unchanged.
+- `templates/workspace/` and `templates/projects/`: reusable application layout, sidebar, project cards, forms, and detail screens.
+- `index.html` and `assets/`: simplified standalone Kanban design preview with browser-local demo tasks, not the database-backed app.
 
 Use template inheritance for page layouts and `{% include %}` for shared UI. Future sidebar, task-card, column, and form fragments should render the same partial on initial requests and asynchronous updates; do not duplicate separate full-page/HTMX markup.
 
@@ -50,9 +51,9 @@ Requirements: Docker with Compose. Python dependencies are locked in `uv.lock`.
    docker compose exec django python manage.py migrate
    ```
 
-4. Open http://localhost:8001. Sign in or create an account to access the foundation page. Its connection button updates a reusable partial through HTMX. JSON health is at `/health/`.
+4. Open http://localhost:8001. Sign in or create an account to access your projects. JSON health is at `/health/`.
 
-The custom email user is included in the first accounts migration. The original standalone design can still be previewed with `python -m http.server 8765 --bind 127.0.0.1`.
+The custom email user is included in the first accounts migration. The standalone Kanban preview can be served with `python -m http.server 8765 --bind 127.0.0.1`.
 
 The Compose project is named `stride_templates`, using a fresh `stride_templates_postgres_data` volume. The previous `stride_postgres_data` volume is not mounted or modified. PostgreSQL has no host port; Django binds to loopback on port 8001 by default (`DJANGO_PORT` overrides it).
 
@@ -82,6 +83,17 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - Authentication uses Django's database-backed sessions and CSRF protection, with password validation and inline errors. Protected HTML is not cached.
 - `LoginRequiredMiddleware` protects application views by default. Login, registration, and the public database diagnostics (`/health/`, `/connection/`) are explicitly exempt; static files remain available.
 
-Project/task CRUD, project-role authorization views, a live Kanban board, and dashboard charts remain deferred. The original board design is unchanged and remains the reference for later screens.
+## Projects
+
+- `/` and `/projects/`: only projects you belong to. New accounts start with an empty workspace, not demo projects.
+- `/projects/new/`: create a project with a title, description, and deadline. The server sets its owner to the signed-in user.
+- `/projects/<id>/`: project overview and its existing team memberships. Members can read; project admins and owners can edit.
+- `/projects/<id>/edit/`: update project details; ownership and membership fields cannot be submitted through this form.
+- `/projects/<id>/delete/`: owner-only confirmation page. Only a CSRF-protected POST deletes the project and its tasks.
+- Outsiders receive 404 responses; insufficient project-role permissions receive 403. Edit/delete writes lock the project row within a transaction.
+- Internal navigation and forms use HTMX with full-page fallbacks. Expired sessions trigger a full login navigation; logout stays a normal POST. Private pages opt out of HTMX history snapshots.
+- Motion is restrained: short page entries, hover transitions, and an async progress indicator. Reduced-motion preferences disable these animations. Request failures display a dismissible message.
+
+Membership-management screens, task CRUD, the database-backed Kanban board, and dashboard charts remain deferred.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.

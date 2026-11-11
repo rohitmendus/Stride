@@ -1,4 +1,4 @@
-<form action="{% url 'accounts:logout' %}" method="post">
+<form action="{% url 'accounts:logout' %}" method="post" hx-boost="false">
   {% csrf_token %}
   <button class="button" type="submit">Sign out</button>
 </form>

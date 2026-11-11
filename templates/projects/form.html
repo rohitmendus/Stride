@@ -1,0 +1,11 @@
+{% extends "workspace/base.html" %}
+{% block title %}{{ submit_label }} · Stride{% endblock %}
+{% block workspace_content %}
+<a class="app-back" href="{% if project %}{% url 'projects:detail' project.pk %}{% else %}{% url 'core:home' %}{% endif %}">&larr; Back to {% if project %}project{% else %}projects{% endif %}</a>
+<div class="form-page"><header class="page-heading"><div><p class="app-eyebrow">PROJECT DETAILS</p><h1>{{ heading }}</h1><p>Keep the goal clear. The rest can take shape.</p></div></header>
+<form method="post" class="app-form" novalidate hx-disabled-elt="find button[type='submit']">
+{% csrf_token %}{% if form.non_field_errors %}<div class="app-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% for field in form %}{% include "components/form_field.html" with field=field only %}{% endfor %}
+<div class="form-actions"><a class="app-button secondary" href="{% if project %}{% url 'projects:detail' project.pk %}{% else %}{% url 'core:home' %}{% endif %}">Cancel</a><button class="app-button primary" type="submit">{{ submit_label }} <span aria-hidden="true">&rarr;</span></button></div>
+</form></div>
+{% endblock %}
