@@ -87,13 +87,17 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 
 - `/` and `/projects/`: only projects you belong to. New accounts start with an empty workspace, not demo projects.
 - `/projects/new/`: create a project with a title, description, and deadline. The server sets its owner to the signed-in user.
-- `/projects/<id>/`: project overview and its existing team memberships. Members can read; project admins and owners can edit.
+- `/projects/<id>/`: read-only project board showing saved tasks in To Do, In Progress, Review, and Completed. No demo tasks are inserted into the live workspace.
+- `/projects/<id>/members/`: existing project members and their roles.
+- `/projects/<id>/settings/`: project details, the existing admin edit action, and owner-only deletion. Members can read settings without gaining edit permission.
 - `/projects/<id>/edit/`: update project details; ownership and membership fields cannot be submitted through this form.
 - `/projects/<id>/delete/`: owner-only confirmation page. Only a CSRF-protected POST deletes the project and its tasks.
 - Outsiders receive 404 responses; insufficient project-role permissions receive 403. Edit/delete writes lock the project row within a transaction.
 - Internal navigation and forms use HTMX with full-page fallbacks. Expired sessions trigger a full login navigation; logout stays a normal POST. Private pages opt out of HTMX history snapshots.
 - Motion is restrained: short page entries, hover transitions, and an async progress indicator. Reduced-motion preferences disable these animations. Request failures display a dismissible message.
+- The live workspace follows the standalone preview's forest-green sidebar, typography, spacing, and board styling. Shared project headers show the deadline and member avatars; Board / Members / Settings are normal accessible navigation links enhanced by HTMX.
+- The sidebar lists up to six recent projects belonging to the signed-in user. Mobile navigation uses a native modal drawer with keyboard focus containment and Escape-to-close.
 
-Membership-management screens, task CRUD, the database-backed Kanban board, and dashboard charts remain deferred.
+Adding/removing members, task CRUD, drag-and-drop persistence, and dashboard charts remain deferred. The current board and member list are explicitly read-only.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.

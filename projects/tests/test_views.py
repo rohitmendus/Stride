@@ -150,3 +150,53 @@ class ProjectViewTests(TestCase):
             "/login/?next=/projects/",
             fetch_redirect_response=False,
         )
+
+    def test_project_workspace_has_scoped_board_members_and_settings(self):
+        from projects.models import ProjectMembership
+        from tasks.models import Task
+
+        project = Project.objects.create(
+            title="Shared launch", owner=self.owner, deadline=date(2026, 12, 31)
+        )
+        ProjectMembership.objects.create(project=project, user=self.other)
+        for status, label in Task.Status.choices:
+            Task.objects.create(
+                title=f"Work in {label}",
+                project=project,
+                created_by=self.owner,
+                deadline=date(2026, 12, 20),
+                status=status,
+            )
+        Task.objects.create(
+            title="Private task",
+            project=self.private,
+            created_by=self.other,
+            deadline=date(2026, 12, 20),
+        )
+        self.client.force_login(self.owner)
+        board = self.client.get(f"/projects/{project.pk}/")
+        self.assertContains(board, "Board</a>", html=False)
+        self.assertContains(board, "Work in Review")
+        self.assertNotContains(board, "Private task")
+        self.assertNotContains(board, "Private project")
+        self.assertEqual(
+            [p.pk for p in board.context["sidebar_projects"]], [project.pk]
+        )
+        self.assertEqual(len(board.context["columns"]), 4)
+        self.assertTemplateUsed(board, "projects/partials/header.html")
+        self.assertContains(
+            self.client.get(f"/projects/{project.pk}/members/"), "other@example.com"
+        )
+        self.assertContains(
+            self.client.get(f"/projects/{project.pk}/settings/"), "Edit project"
+        )
+        for section in ("members", "settings"):
+            self.assertEqual(
+                self.client.get(f"/projects/{self.private.pk}/{section}/").status_code,
+                404,
+            )
+        self.client.force_login(self.other)
+        settings_page = self.client.get(f"/projects/{project.pk}/settings/")
+        self.assertEqual(settings_page.status_code, 200)
+        self.assertNotContains(settings_page, "Edit project")
+        self.assertNotContains(settings_page, "Delete project")

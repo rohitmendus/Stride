@@ -1,0 +1,19 @@
+{% extends "workspace/base.html" %}
+{% block title %}Settings · {{ project.title }} · Stride{% endblock %}
+{% block workspace_content %}
+<section class="settings-panel">
+  <h2>Project details</h2>
+  <div class="project-copy">{{ project.description|default:"No description yet."|linebreaksbr }}</div>
+  <dl class="settings-facts">
+    <div><dt>Deadline</dt><dd>{{ project.deadline|date:"M j, Y" }}</dd></div>
+    <div><dt>Project owner</dt><dd>{{ project.owner.get_full_name|default:project.owner.email }}</dd></div>
+    <div><dt>Created</dt><dd>{{ project.created_at|date:"M j, Y" }}</dd></div>
+  </dl>
+</section>
+{% if project.owner_id == request.user.pk %}
+<section class="project-danger-zone">
+  <div><h2>Delete project</h2><p>Permanently remove this project and all its tasks.</p></div>
+  <a class="app-button danger-button" href="{% url 'projects:delete' project.pk %}">Delete project</a>
+</section>
+{% endif %}
+{% endblock %}

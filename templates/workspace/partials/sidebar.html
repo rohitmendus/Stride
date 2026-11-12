@@ -1,6 +1,3 @@
 <aside class="app-sidebar" aria-label="Main navigation">
-  {% include "components/brand.html" %}
-  <div class="app-nav-label">WORKSPACE</div>
-  <nav><a class="app-nav-link active" href="{% url 'core:home' %}" aria-current="page"><span aria-hidden="true">▦</span> Projects</a></nav>
-  <div class="app-sidebar-bottom"><div class="app-profile"><span class="app-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.email|slice:":1"|upper }}</span><span><strong>{{ request.user.first_name|default:"Your account" }}</strong><small>Personal workspace</small></span></div>{% include "accounts/partials/logout.html" %}</div>
+  {% include "workspace/partials/sidebar_content.html" %}
 </aside>

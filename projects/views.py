@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import F, Prefetch
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
+
+from tasks.models import Task
 
 from .forms import ProjectForm
 from .models import Project, ProjectMembership
@@ -18,6 +20,19 @@ def _projects_for(user):
     )
 
 
+def _project_context(project, active_tab):
+    memberships = list(
+        project.memberships.select_related("user").order_by("joined_at", "pk")
+    )
+    return {
+        "project": project,
+        "active_tab": active_tab,
+        "memberships": memberships,
+        "member_avatars": memberships[:4],
+        "extra_member_count": max(0, len(memberships) - 4),
+    }
+
+
 @require_GET
 @never_cache
 def project_list(request):
@@ -29,18 +44,35 @@ def project_list(request):
 @require_GET
 @never_cache
 def project_detail(request, pk):
-    project = get_object_or_404(
-        _projects_for(request.user).prefetch_related(
-            Prefetch(
-                "memberships",
-                queryset=ProjectMembership.objects.select_related("user").order_by(
-                    "joined_at", "pk"
-                ),
-            )
-        ),
-        pk=pk,
+    project = get_object_or_404(_projects_for(request.user), pk=pk)
+    context = _project_context(project, "board")
+    columns = {
+        status: {"status": status, "label": label, "tasks": []}
+        for status, label in Task.Status.choices
+    }
+    tasks = list(project.tasks.select_related("assigned_to"))
+    for task in tasks:
+        columns[task.status]["tasks"].append(task)
+    context.update(columns=list(columns.values()), task_count=len(tasks))
+    return render(request, "projects/detail.html", context)
+
+
+@require_GET
+@never_cache
+def project_members(request, pk):
+    project = get_object_or_404(_projects_for(request.user), pk=pk)
+    return render(
+        request, "projects/members.html", _project_context(project, "members")
     )
-    return render(request, "projects/detail.html", {"project": project})
+
+
+@require_GET
+@never_cache
+def project_settings(request, pk):
+    project = get_object_or_404(_projects_for(request.user), pk=pk)
+    return render(
+        request, "projects/settings.html", _project_context(project, "settings")
+    )
 
 
 @require_http_methods(["GET", "POST"])
