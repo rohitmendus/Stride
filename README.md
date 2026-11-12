@@ -1,6 +1,6 @@
 # Stride
 
-Django templates + HTMX + PostgreSQL. No React, DRF, frontend container, or JavaScript build pipeline.
+Django templates + HTMX + PostgreSQL, with Channels + Redis for live dashboard updates. No React, DRF, frontend container, or JavaScript build pipeline.
 
 ## Project foundation
 
@@ -39,7 +39,7 @@ Requirements: Docker with Compose. Python dependencies are locked in `uv.lock`.
    python -c "import secrets; print(secrets.token_urlsafe(48))"
    ```
 
-2. Build and start the two services:
+2. Build and start Django, PostgreSQL, and Redis:
 
    ```sh
    docker compose up --build -d --wait
@@ -65,7 +65,7 @@ docker compose logs -f django
 docker compose down
 ```
 
-Do not add `-v` to `down` unless you intend to erase this new database. Source edits hot-reload; Python dependencies live in `/opt/venv` inside the image so the source mount does not hide them. Rebuild after dependency or environment changes.
+Do not add `-v` to `down` unless you intend to erase this new database. Daphne serves HTTP and WebSockets; restart Django after Python changes (`docker compose restart django`). Python dependencies live in `/opt/venv` inside the image so the source mount does not hide them. Rebuild after dependency or environment changes. Redis has no host port. In local DEBUG mode, the ASGI application serves static assets; production needs a static-file server and a reverse proxy configured for secure WebSocket upgrades.
 
 ## Domain models
 
@@ -120,6 +120,9 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - `/dashboard/` summarizes all tasks in projects the signed-in user currently belongs to, not only their assignments. It shows Total, Completed, Pending, and Overdue counts, a task-status bar chart, and up to three overdue and three upcoming tasks with project, assignee, priority, and deadline.
 - Pending includes To Do, In Progress, and Review. Overdue is the unfinished subset with a deadline before today in the configured timezone; tasks due today are not overdue. Upcoming includes today through seven days ahead.
 - HTMX refreshes dashboard content every 15 seconds while the tab is visible and immediately when returning to it. A manual Refresh link has a full-page fallback. Failed refreshes retain the last data and show a stale-data notice; the next successful refresh clears it. Navigation and the sidebar are not replaced by polling.
+- `/ws/dashboard/` provides immediate refresh notifications through Channels and Redis. Connections use Django sessions and origin validation, and subscribe only to their own server-selected user group. Messages contain no task details. Sessions are rechecked before notifications and every 20 seconds; deleted sessions close their sockets. Heartbeats renew group membership, and the browser reconnects with backoff and reloads current data after connecting.
+- Task/project/member model saves and deletions publish only after a successful commit, including notifications for removed members and deleted projects. Broadcasts have a two-second timeout; Redis failure does not roll back or fail the saved task. Bulk SQL updates bypass model signals; polling remains the safety net for missed events and calendar changes.
+- The browser opens a socket only on the dashboard, combines bursts into one refresh, queues a follow-up when a change arrives during a request, and closes the socket when leaving. The original 15-second polling remains active, including during socket outages. Project boards do not gain live synchronization in this checkpoint.
 - Counts and chart data use database aggregation; every refresh rechecks membership. Dashboard responses are private, uncached, and vary by HTMX request/target headers. The chart uses CSS without additional dependencies. On mobile, totals form two columns and panels stack.
 
 Member management adds existing accounts; email invitations are not implemented.

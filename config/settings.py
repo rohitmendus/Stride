@@ -50,6 +50,15 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get("REDIS_URL", "redis://redis:6379/0")],
+            "prefix": "stride_dashboard",
+        },
+    }
+}
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

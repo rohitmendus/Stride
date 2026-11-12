@@ -1,5 +1,13 @@
 name: stride_templates
 services:
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   postgres:
     image: postgres:17-alpine
     environment:
@@ -28,12 +36,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       DB_HOST: postgres
       DB_PORT: "5432"
+      REDIS_URL: redis://redis:6379/0
     ports:
       - "127.0.0.1:${DJANGO_PORT:-8001}:8000"
     volumes:
       - .:/app
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=6)"]

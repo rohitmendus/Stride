@@ -1,6 +1,6 @@
 <div class="dashboard-refresh" role="status">
   <span data-dashboard-status>Updated <time datetime="{{ updated_at|date:'c' }}">{{ updated_at|date:"H:i:s" }}</time></span>
-  <span>Refreshes every 15 seconds</span>
+  <span data-dashboard-connection>Auto-refresh every 15 seconds</span>
 </div>
 <div class="dashboard-metrics" aria-label="Task overview">
   {% for metric in metrics %}
