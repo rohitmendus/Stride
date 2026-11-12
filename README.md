@@ -13,6 +13,16 @@ A project management app built with Django, HTMX, PostgreSQL, and Redis.
 
 Live updates use WebSockets, without timed polling.
 
+## Tech Stack
+
+- **Backend:** Django 5.2, Python 3.13
+- **Frontend:** Django templates + HTMX 2.0 (no React, no build step)
+- **Database:** PostgreSQL 17
+- **Real-time:** Django Channels 4 + Redis 7 (WebSockets)
+- **Drag & Drop:** SortableJS 1.15
+- **Container:** Docker + Docker Compose
+- **Package Manager:** uv
+
 ## Setup
 
 Requires Docker with Docker Compose. Run commands from the project folder.
