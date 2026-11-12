@@ -17,7 +17,7 @@
 .app-profile small { font-size: 10px; color: #b8ccbe; margin-top: 2px; }
 .app-profile .app-avatar { width: 27px; height: 27px; font-size: 9px; }
 .app-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #eaf1e8; color: var(--accent); font-size: 13px; font-weight: 600; }
-.app-sidebar-bottom .logout-button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 7px; background: none; color: #b8ccbe; font-size: 12px; transition: background 160ms ease, color 160ms ease; }
+.app-sidebar-bottom .logout-button { display: flex; align-items: center; justify-content: flex-start; width: 100%; gap: 8px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 7px; background: none; color: #b8ccbe; font-size: 12px; transition: background 160ms ease, color 160ms ease; }
 .app-sidebar-bottom .logout-button:hover { background: #315c49; color: #f4f7f0; }
 .app-main { min-width: 0; margin: 0; }
 .app-topbar { min-height: 60px; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
