@@ -148,7 +148,7 @@ def _board_context(project, user, params=None):
 def _my_tasks_context(user, params=None):
     options = _board_options(params) | {
         "workspace": "mine",
-        "view": "list",
+        "view": "board",
         "mine": "",
         "assignee": "",
     }
@@ -158,6 +158,10 @@ def _my_tasks_context(user, params=None):
         ).select_related("project")
     )
     visible = []
+    columns = {
+        status: {"status": status, "label": label, "tasks": []}
+        for status, label in Task.Status.choices
+    }
     today = timezone.localdate()
     for task in tasks:
         if (
@@ -171,10 +175,18 @@ def _my_tasks_context(user, params=None):
             continue
         task.is_overdue = task.status != Task.Status.COMPLETED and task.deadline < today
         task.assignee_label = user.get_full_name() or user.email
+        task.assignee_initials = (
+            "".join(part[0] for part in user.get_full_name().split()[:2]).upper()
+            or user.email[0].upper()
+        )
+        task.avatar_color = ("green", "peach", "blue")[user.pk % 3]
+        task.can_manage = True
         visible.append(task)
+        columns[task.status]["tasks"].append(task)
     url = reverse("projects:my_tasks")
     return {
         "personal_workspace": True,
+        "columns": list(columns.values()),
         "visible_tasks": visible,
         "task_count": len(tasks),
         "visible_count": len(visible),

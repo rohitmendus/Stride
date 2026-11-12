@@ -1,0 +1,14 @@
+<div class="workspace-board" id="board" aria-label="Kanban board">
+  {% for column in columns %}
+    <section class="workspace-column" data-task-status="{{ column.status }}" aria-labelledby="column-{{ column.status }}">
+      <header class="column-heading">
+        <span class="status-dot" aria-hidden="true"></span><h2 id="column-{{ column.status }}">{{ column.label }}</h2><span class="column-count">{{ column.tasks|length }}</span>
+        {% if not personal_workspace %}<a class="icon-button" data-column-add="{{ column.status }}" href="{% url 'tasks:create' project.pk %}?status={{ column.status }}{% if board_query %}&amp;{{ board_query }}{% endif %}" hx-get="{% url 'tasks:create' project.pk %}?status={{ column.status }}{% if board_query %}&amp;{{ board_query }}{% endif %}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false" aria-label="Add task to {{ column.label }}" aria-haspopup="dialog">{% include "components/icon.html" with name="plus" only %}</a>{% endif %}
+      </header>
+      <div class="workspace-column-cards">
+        {% for task in column.tasks %}{% include "projects/partials/task_card.html" %}{% empty %}<p class="workspace-column-empty">No tasks here. A little breathing room.</p>{% endfor %}
+      </div>
+      {% if not personal_workspace %}<a class="add-card" data-column-add="{{ column.status }}" href="{% url 'tasks:create' project.pk %}?status={{ column.status }}{% if board_query %}&amp;{{ board_query }}{% endif %}" hx-get="{% url 'tasks:create' project.pk %}?status={{ column.status }}{% if board_query %}&amp;{{ board_query }}{% endif %}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false" aria-haspopup="dialog">{% include "components/icon.html" with name="plus" only %}Add task</a>{% endif %}
+    </section>
+  {% endfor %}
+</div>

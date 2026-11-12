@@ -25,6 +25,7 @@
   const moveTask = async (card, status, beforeId = "") => {
     const board = card?.closest("#project-board");
     if (!board?.isConnected || pendingMove || board.dataset.moveFailed) return;
+    if (board.dataset.projectId === "my-tasks") beforeId = "";
     pendingMove = card;
     board.classList.add("is-saving");
     board.setAttribute("aria-busy", "true");
@@ -70,6 +71,7 @@
       if (Sortable.get(list)) return;
       let origin;
       Sortable.create(list, {
+        sort: board.dataset.projectId !== "my-tasks",
         group: "stride-tasks", draggable: ".workspace-task",
         filter: ".workspace-task:not([data-move-task])", preventOnFilter: false,
         animation: motion.matches ? 0 : 160, direction: "vertical",
@@ -122,6 +124,8 @@
     event.preventDefault();
     const column = card.closest("[data-task-status]");
     if (!column) return;
+    if (card.closest("#project-board").dataset.projectId === "my-tasks" &&
+        (event.key === "ArrowUp" || event.key === "ArrowDown")) return;
     const cards = Array.from(column.querySelectorAll(".workspace-task"));
     const index = cards.indexOf(card);
     if (event.key === "ArrowUp" && index > 0) {

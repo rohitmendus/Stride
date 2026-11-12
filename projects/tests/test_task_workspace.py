@@ -198,6 +198,9 @@ class TaskWorkspaceTests(TestCase):
         )
         self.assertEqual(page.context["sidebar_my_task_count"], 2)
         self.assertContains(page, "Second launch")
+        self.assertContains(page, 'class="workspace-board"')
+        self.assertEqual(len(page.context["columns"]), 4)
+        self.assertContains(page, f'/projects/{other_project.pk}/tasks/{assigned.pk}/move/')
         response = self.client.post(
             f"/projects/{other_project.pk}/tasks/{assigned.pk}/edit/?workspace=mine",
             {
