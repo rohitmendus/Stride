@@ -26,7 +26,7 @@ class AuthenticationTests(TestCase):
         response = self.client.post(
             "/login/", {"username": " ALEX@EXAMPLE.COM ", "password": PASSWORD}
         )
-        self.assertRedirects(response, "/")
+        self.assertRedirects(response, "/dashboard/")
         self.assertTrue(response.cookies[settings.SESSION_COOKIE_NAME]["httponly"])
         home = self.client.get("/")
         self.assertContains(home, "alex@example.com")
@@ -61,7 +61,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
         self.assertContains(self.client.get("/"), "sam@example.com")
         self.assertRedirects(self.client.get("/register/"), "/")
-        self.assertRedirects(self.client.get("/login/"), "/")
+        self.assertRedirects(self.client.get("/login/"), "/dashboard/")
 
     def test_invalid_registration_does_not_create_or_sign_in_a_user(self):
         valid = {
@@ -108,7 +108,7 @@ class AuthenticationTests(TestCase):
                     "/login/",
                     {"username": self.user.email, "password": PASSWORD, "next": target},
                 ),
-                "/",
+                "/dashboard/",
             )
             self.client.logout()
 
@@ -130,7 +130,8 @@ class AuthenticationTests(TestCase):
             403,
         )
         self.assertRedirects(
-            client.post("/login/", credentials | {"csrfmiddlewaretoken": token}), "/"
+            client.post("/login/", credentials | {"csrfmiddlewaretoken": token}),
+            "/dashboard/",
         )
         self.assertEqual(client.post("/logout/").status_code, 403)
         self.assertIn("_auth_user_id", client.session)

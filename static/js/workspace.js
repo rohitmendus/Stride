@@ -29,6 +29,7 @@
   document.addEventListener("htmx:afterSettle", showFlashMessages);
 
   const showRequestError = (event) => {
+    if (event.detail.target?.id === "dashboard-content") return;
     if (!event.detail.elt?.closest(".app-shell")) return;
     const message = event.detail.elt.closest("#task-dialog")?.querySelector("[data-task-request-error]") || document.getElementById("workspace-request-error");
     if (message) {
@@ -107,7 +108,8 @@
     memberFocus = true;
     window.strideNotify(event.detail.message);
   });
-  document.addEventListener("htmx:beforeSwap", () => {
+  document.addEventListener("htmx:beforeSwap", (event) => {
+    if (event.detail.target?.id === "dashboard-content") return;
     document.getElementById("workspace-navigation")?.close();
   });
   window.matchMedia("(min-width: 761px)").addEventListener("change", (event) => {

@@ -1,0 +1,36 @@
+<div class="dashboard-refresh" role="status">
+  <span data-dashboard-status>Updated <time datetime="{{ updated_at|date:'c' }}">{{ updated_at|date:"H:i:s" }}</time></span>
+  <span>Refreshes every 15 seconds</span>
+</div>
+<div class="dashboard-metrics" aria-label="Task overview">
+  {% for metric in metrics %}
+  <section class="dashboard-metric{% if metric.key == 'overdue' and metric.value %} has-overdue{% endif %}">
+    <h2>{{ metric.label }}</h2><strong data-metric="{{ metric.key }}">{{ metric.value }}</strong><p>{{ metric.detail }}</p>
+  </section>
+  {% endfor %}
+</div>
+<div class="dashboard-panels">
+  <section class="dashboard-panel" aria-labelledby="status-chart-title">
+    <header class="section-heading"><h2 id="status-chart-title">Task status</h2><span>{{ summary.total }} task{{ summary.total|pluralize }}</span></header>
+    <p class="dashboard-panel-description">Where the work stands.</p>
+    <figure class="dashboard-chart" aria-label="Task counts by status">
+      {% for row in chart %}
+      <div class="dashboard-chart-row" data-status="{{ row.status }}">
+        <div><span>{{ row.label }}</span><strong>{{ row.count }}</strong></div>
+        <div class="dashboard-bar-track" aria-hidden="true"><span style="width: {{ row.percent }}%"></span></div>
+      </div>
+      {% endfor %}
+      {% if not summary.total %}<figcaption>No tasks yet. Create a project and add your first task.</figcaption>{% endif %}
+    </figure>
+    <p class="dashboard-chart-note">Overdue tasks are included in pending work.</p>
+  </section>
+  <section class="dashboard-panel" aria-labelledby="attention-title">
+    <header class="section-heading"><h2 id="attention-title">Needs attention</h2><span>Nearest deadlines</span></header>
+    <div class="dashboard-deadlines">
+      <h3>Overdue</h3>
+      {% for task in overdue_tasks %}{% include "core/partials/dashboard_task.html" with overdue=True %}{% empty %}<p class="dashboard-empty">Nothing overdue. A little breathing room.</p>{% endfor %}
+      <h3>Due in the next 7 days</h3>
+      {% for task in upcoming_tasks %}{% include "core/partials/dashboard_task.html" with overdue=False %}{% empty %}<p class="dashboard-empty">No upcoming deadlines this week.</p>{% endfor %}
+    </div>
+  </section>
+</div>

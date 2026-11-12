@@ -6,7 +6,8 @@ from .models import Project
 def workspace_navigation(request):
     match = request.resolver_match
     if match is None or (
-        match.namespace not in ("projects", "tasks") and match.view_name != "core:home"
+        match.namespace not in ("projects", "tasks")
+        and match.view_name not in ("core:home", "core:dashboard")
     ):
         return {}
     if not request.user.is_authenticated:

@@ -77,7 +77,7 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 
 ## Authentication
 
-- `/login/`: email/password sign-in, with safe same-origin return URLs.
+- `/login/`: email/password sign-in, defaulting to `/dashboard/`, with safe same-origin return URLs.
 - `/register/`: first name, email, password, and confirmation; successful registration signs in a regular, non-staff user.
 - `/logout/`: POST only, submitted through the shared sign-out form.
 - Authentication uses Django's database-backed sessions and CSRF protection, with password validation and inline errors. Protected HTML is not cached.
@@ -96,7 +96,7 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - Internal navigation and forms use HTMX with full-page fallbacks. Expired sessions trigger a full login navigation; logout stays a normal POST. Private pages opt out of HTMX history snapshots.
 - Motion is restrained: short page entries, hover transitions, and an async progress indicator. Reduced-motion preferences disable these animations. Request failures display a dismissible message.
 - The live workspace mirrors the standalone preview's forest-green task styling, toolbar, column add actions, and bottom notifications. Project pages use Board / Members / Settings tabs, with the project description, member avatars/count, and due date above them. Logout hover spans the full navigation row.
-- The sidebar contains Projects and My Tasks, followed by up to six recent projects. Clicking a recent project shows its tasks assigned to anyone; My Tasks lists only tasks assigned to the signed-in user across all their member projects. Logout is a plain POST action above the profile. Mobile navigation uses a native modal drawer with keyboard focus containment and Escape-to-close.
+- The sidebar contains Dashboard, Projects, and My Tasks, followed by up to six recent projects. Clicking a recent project shows its tasks assigned to anyone; My Tasks shows only tasks assigned to the signed-in user across all their member projects. Logout is a plain POST action above the profile. Mobile navigation uses a native modal drawer with keyboard focus containment and Escape-to-close.
 
 ## Tasks
 
@@ -115,6 +115,13 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - `/projects/my-tasks/` shows assigned tasks across member projects in the same four-column Kanban layout as project boards. Cards identify their project and use the same authorized task dialogs. Dragging between columns changes status; ordering remains project-scoped, so within-column reordering is available on project boards only. Reassigning a task away removes it from My Tasks and updates the global assignment count.
 - Search and filters use GET query parameters and scoped server-rendered fragments. Saving/editing/deleting retains the originating project or personal board and its filters; ordinary forms also return to that workspace. Success/status changes appear in the bottom toast, with a persistent save indicator and accessible announcements.
 
-Dashboard counts and charts remain deferred. Member management adds existing accounts; email invitations are not implemented.
+## Dashboard
+
+- `/dashboard/` summarizes all tasks in projects the signed-in user currently belongs to, not only their assignments. It shows Total, Completed, Pending, and Overdue counts, a task-status bar chart, and up to three overdue and three upcoming tasks with project, assignee, priority, and deadline.
+- Pending includes To Do, In Progress, and Review. Overdue is the unfinished subset with a deadline before today in the configured timezone; tasks due today are not overdue. Upcoming includes today through seven days ahead.
+- HTMX refreshes dashboard content every 15 seconds while the tab is visible and immediately when returning to it. A manual Refresh link has a full-page fallback. Failed refreshes retain the last data and show a stale-data notice; the next successful refresh clears it. Navigation and the sidebar are not replaced by polling.
+- Counts and chart data use database aggregation; every refresh rechecks membership. Dashboard responses are private, uncached, and vary by HTMX request/target headers. The chart uses CSS without additional dependencies. On mobile, totals form two columns and panels stack.
+
+Member management adds existing accounts; email invitations are not implemented.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.
