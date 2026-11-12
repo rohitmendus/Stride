@@ -51,7 +51,7 @@
 .auth-form input::placeholder { color: #89918b; }
 .auth-password { position: relative; }
 .auth-form .auth-password input { padding-right: 52px; }
-.password-toggle { position: absolute; right: 2px; top: 2px; display: grid; place-items: center; width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 5px; background: transparent; color: #68736b; cursor: pointer; }
+.password-toggle { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 10px; border: 0; border-radius: 5px; background: transparent; color: #68736b; cursor: pointer; }
 .password-toggle[aria-pressed="false"] .password-slash { display: none; }
 .password-toggle:hover { background: #edf4ef; }
 .password-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
