@@ -64,7 +64,8 @@ class DashboardTests(TestCase):
             ["todo task", "in_progress task"],
         )
         self.assertContains(response, 'id="dashboard-content"')
-        self.assertContains(response, "every 15s")
+        self.assertNotContains(response, "every 15s")
+        self.assertContains(response, "dashboardChanged")
         self.assertNotContains(response, "Private task")
 
     def test_dashboard_refresh_rechecks_access_and_handles_empty_and_anonymous_users(

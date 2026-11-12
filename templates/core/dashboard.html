@@ -5,7 +5,7 @@
   <div><h1>Dashboard<span class="heading-dot">.</span></h1><p>A clear view of work across your projects.</p></div>
   <a class="app-button secondary" href="{% url 'core:dashboard' %}" hx-get="{% url 'core:dashboard' %}" hx-target="#dashboard-content" hx-swap="innerHTML" hx-push-url="false" hx-sync="#dashboard-content:drop">Refresh</a>
 </header>
-<div id="dashboard-content" data-dashboard-socket="/ws/dashboard/" hx-get="{% url 'core:dashboard' %}" hx-trigger="dashboardChanged, every 15s [!document.hidden], visibilitychange[!document.hidden] from:document" hx-swap="innerHTML" hx-push-url="false" hx-sync="this:drop" hx-boost="false" hx-request='{"timeout":10000}'>
+<div id="dashboard-content" data-dashboard-socket="/ws/dashboard/" hx-get="{% url 'core:dashboard' %}" hx-trigger="dashboardChanged, visibilitychange[!document.hidden] from:document" hx-swap="innerHTML" hx-push-url="false" hx-sync="this:drop" hx-boost="false" hx-request='{"timeout":10000}'>
   {% include "core/partials/dashboard.html" %}
 </div>
 {% endblock %}

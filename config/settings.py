@@ -54,7 +54,13 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get("REDIS_URL", "redis://redis:6379/0")],
+            "hosts": [
+                {
+                    "address": os.environ.get("REDIS_URL", "redis://redis:6379/0"),
+                    "socket_timeout": 10,  # Longer than Channels' five-second blocking read.
+                    "socket_connect_timeout": 2,
+                }
+            ],
             "prefix": "stride_dashboard",
         },
     }

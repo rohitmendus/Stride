@@ -11,7 +11,7 @@
   const connectionStatus = () => {
     const label = board?.querySelector('[data-dashboard-connection]');
     if (label) label.textContent = socket && socket.readyState === window.WebSocket?.OPEN
-      ? 'Live · 15-second backup' : 'Auto-refresh every 15 seconds';
+      ? 'Live updates' : 'Connecting live updates…';
   };
   const flush = () => {
     if (!board?.isConnected || document.hidden || inFlight || !dirty) return;

@@ -30,7 +30,7 @@ def _publish(user_ids):
     try:
         async_to_sync(_broadcast)(user_ids)
     except (RedisError, OSError, ChannelFull):
-        logger.warning("Dashboard notification unavailable; polling remains active.")
+        logger.warning("Dashboard notification unavailable.")
 
 
 def notify_project(project_id, using, extra_users=()):
