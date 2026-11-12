@@ -1,6 +1,8 @@
 {% extends "accounts/base.html" %}
+{% load static %}
 {% block title %}Sign in · Stride{% endblock %}
 {% block auth_heading %}Welcome back.{% endblock %}
 {% block auth_description %}Sign in to pick up where you left off.{% endblock %}
 {% block auth_content %}{% include "accounts/partials/form.html" with submit_label="Sign in" %}{% endblock %}
 {% block auth_switch %}New to Stride? <a href="{% url 'accounts:register' %}">Create an account</a>{% endblock %}
+{% block extra_scripts %}<script src="{% static 'js/password-toggle.js' %}" defer></script>{% endblock %}
