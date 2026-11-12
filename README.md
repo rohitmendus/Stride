@@ -25,7 +25,7 @@ uv run django-admin startapp tasks
 - `templates/core/partials/`: small HTML fragments reused by full pages and HTMX responses.
 - `static/`: application CSS, HTMX 2.0.11, and SortableJS 1.15.7, served locally with their licenses. No CDN or JavaScript build step is required.
 - `templates/workspace/` and `templates/projects/`: reusable application layout, sidebar, project cards, forms, and detail screens.
-- `index.html` and `assets/`: simplified standalone Kanban design preview with browser-local demo tasks, not the database-backed app.
+- `assets/styles.css`: shared baseline styling used by the database-backed app.
 
 Use template inheritance for page layouts and `{% include %}` for shared UI. Future sidebar, task-card, column, and form fragments should render the same partial on initial requests and asynchronous updates; do not duplicate separate full-page/HTMX markup.
 
@@ -53,7 +53,7 @@ Requirements: Docker with Compose. Python dependencies are locked in `uv.lock`.
 
 4. Open http://localhost:8001. Sign in or create an account to access your projects. JSON health is at `/health/`.
 
-The custom email user is included in the first accounts migration. The standalone Kanban preview can be served with `python -m http.server 8765 --bind 127.0.0.1`.
+The custom email user is included in the first accounts migration.
 
 The Compose project is named `stride_templates`, using a fresh `stride_templates_postgres_data` volume. The previous `stride_postgres_data` volume is not mounted or modified. PostgreSQL has no host port; Django binds to loopback on port 8001 by default (`DJANGO_PORT` overrides it).
 
@@ -95,7 +95,7 @@ Do not add `-v` to `down` unless you intend to erase this new database. Daphne s
 - Outsiders receive 404 responses; insufficient project-role permissions receive 403. Edit/delete writes lock the project row within a transaction.
 - Internal navigation and forms use HTMX with full-page fallbacks. Expired sessions trigger a full login navigation; logout stays a normal POST. Private pages opt out of HTMX history snapshots.
 - Motion is restrained: short page entries, hover transitions, and an async progress indicator. Reduced-motion preferences disable these animations. Request failures display a dismissible message.
-- The live workspace mirrors the standalone preview's forest-green task styling, toolbar, column add actions, and bottom notifications. Project pages use Board / Members / Settings tabs, with the project description, member avatars/count, and due date above them. Logout hover spans the full navigation row.
+- The live workspace uses forest-green task styling, a toolbar, column add actions, and bottom notifications. Project pages use Board / Members / Settings tabs, with the project description, member avatars/count, and due date above them. Logout hover spans the full navigation row.
 - The sidebar contains Dashboard, Projects, and My Tasks, followed by up to six recent projects. Clicking a recent project shows its tasks assigned to anyone; My Tasks shows only tasks assigned to the signed-in user across all their member projects. Logout is a plain POST action above the profile. Mobile navigation uses a native modal drawer with keyboard focus containment and Escape-to-close.
 
 ## Tasks
