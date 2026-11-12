@@ -6,10 +6,12 @@
 <div class="app-shell" hx-boost="true" hx-push-url="true" hx-history="false" hx-swap="innerHTML show:top">
   {% include "workspace/partials/sidebar.html" %}
   <dialog class="app-mobile-drawer" id="workspace-navigation" aria-label="Workspace navigation"><button type="button" class="drawer-close" data-close-navigation aria-label="Close navigation">{% include "components/icon.html" with name="close" only %}</button>{% include "workspace/partials/sidebar_content.html" %}</dialog>
+  <dialog class="task-dialog" id="task-dialog" aria-labelledby="task-dialog-title"><div id="task-dialog-content"></div></dialog>
   <main class="app-main" id="main-content">
     <header class="app-topbar"><div class="app-location"><button class="app-menu-button" type="button" data-open-navigation aria-label="Open navigation" aria-haspopup="dialog" aria-controls="workspace-navigation">{% include "components/icon.html" with name="menu" only %}</button><nav class="app-breadcrumb" aria-label="Breadcrumb"><a href="{% url 'core:home' %}">Projects</a>{% if project %}<span aria-hidden="true">/</span><strong>{{ project.title }}</strong>{% endif %}</nav></div><span class="app-account">{{ request.user.email }}</span></header>
     <div class="app-content"><div class="request-error" id="workspace-request-error" role="alert" hidden><span>We couldn’t confirm that change. Refresh this page before trying again.</span><button type="button" data-dismiss-request-error aria-label="Dismiss error">&times;</button></div>{% if active_tab %}{% include "projects/partials/header.html" %}{% endif %}{% block workspace_content %}{% endblock %}</div>
   </main>
+  <span class="task-live-status" id="task-live-status" role="status"></span>
 </div>
 {% endblock %}
 {% block extra_scripts %}<script src="{% static 'js/workspace.js' %}" defer></script>{% endblock %}

@@ -87,7 +87,7 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 
 - `/` and `/projects/`: only projects you belong to. New accounts start with an empty workspace, not demo projects.
 - `/projects/new/`: create a project with a title, description, and deadline. The server sets its owner to the signed-in user.
-- `/projects/<id>/`: read-only project board showing saved tasks in To Do, In Progress, Review, and Completed. No demo tasks are inserted into the live workspace.
+- `/projects/<id>/`: project task board with creation, details, editing, and deletion dialogs. Tasks appear in To Do, In Progress, Review, and Completed; no demo tasks are inserted into the live workspace.
 - `/projects/<id>/members/`: existing project members and their roles.
 - `/projects/<id>/settings/`: project details, the existing admin edit action, and owner-only deletion. Members can read settings without gaining edit permission.
 - `/projects/<id>/edit/`: update project details; ownership and membership fields cannot be submitted through this form.
@@ -98,6 +98,16 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - The live workspace follows the standalone preview's forest-green sidebar, typography, spacing, and board styling. Shared project headers show the deadline and member avatars; Board / Members / Settings are normal accessible navigation links enhanced by HTMX.
 - The sidebar lists up to six recent projects belonging to the signed-in user. Mobile navigation uses a native modal drawer with keyboard focus containment and Escape-to-close.
 
-Adding/removing members, task CRUD, drag-and-drop persistence, and dashboard charts remain deferred. The current board and member list are explicitly read-only.
+## Tasks
+
+- `/projects/<id>/tasks/new/`: any project member can create a task. The server sets its project and creator; the form accepts only title, description, assignee, priority, deadline, and status.
+- `/projects/<id>/tasks/<task-id>/`: all project members can read the full task. Project admins, its creator, and its assignee receive the editable form; other members receive a view-only detail screen.
+- `/projects/<id>/tasks/<task-id>/edit/` and `/delete/`: admins can manage all tasks; members can manage tasks they created or are currently assigned to. Permissions are checked again on each write. Deletion requires a confirmation followed by CSRF-protected POST.
+- Assignee choices contain only active members of the current project, with an Unassigned option. Invalid titles, dates, priority/status values, and out-of-project or inactive assignees produce inline errors without saving.
+- Task dialogs use shared form/detail partials and HTMX. Successful mutations return a fresh board through an out-of-band swap, retaining the page and project header. Ordinary full-page forms also work without JavaScript.
+- Dialogs support keyboard focus, Escape/cancel, safe confirmation focus, reduced motion, and draft-preserving failure feedback. After a save, focus moves to the refreshed task; after deletion, it moves to New task.
+- Writes lock the project, its memberships, and the edited task inside a transaction. New tasks and status changes append to their destination column; completion timestamps follow the model's existing rules.
+
+Adding/removing members, drag-and-drop persistence, and dashboard charts remain deferred. The member list is still read-only.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.

@@ -1,5 +1,5 @@
-<article class="workspace-task{% if task.status == 'completed' %} is-complete{% endif %}">
+<a class="workspace-task{% if task.status == 'completed' %} is-complete{% endif %}" href="{% url 'tasks:detail' project.pk task.pk %}" data-task-id="{{ task.pk }}" hx-get="{% url 'tasks:detail' project.pk task.pk %}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false" aria-haspopup="dialog" aria-controls="task-dialog" aria-label="Open task: {{ task.title }}">
   <div class="workspace-task-top"><span class="workspace-task-id">STR-{{ task.pk|stringformat:"03d" }}</span><span class="task-priority priority-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
   <h3>{{ task.title }}</h3>{% if task.description %}<p>{{ task.description|truncatechars:140 }}</p>{% endif %}
   <div class="workspace-task-footer"><time datetime="{{ task.deadline|date:'Y-m-d' }}">{{ task.deadline|date:"M j" }}</time>{% if task.assigned_to %}<span class="app-avatar" title="{{ task.assigned_to.get_full_name|default:task.assigned_to.email }}">{{ task.assigned_to.first_name|default:task.assigned_to.email|slice:":1"|upper }}</span>{% else %}<span>Unassigned</span>{% endif %}</div>
-</article>
+</a>

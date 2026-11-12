@@ -1,0 +1,6 @@
+{% extends "workspace/base.html" %}
+{% block title %}{{ heading }} · {{ project.title }} · Stride{% endblock %}
+{% block workspace_content %}
+<a class="app-back" href="{% url 'projects:detail' project.pk %}">&larr; Back to board</a>
+<section class="task-page">{% include partial %}</section>
+{% endblock %}

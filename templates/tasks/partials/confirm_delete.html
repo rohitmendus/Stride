@@ -1,0 +1,6 @@
+{% include "tasks/partials/heading.html" %}
+<p class="task-confirm-copy">You’re about to delete <strong>{{ task.title }}</strong>. This cannot be undone.</p>
+<form method="post" action="{{ form_action }}" hx-disabled-elt="find button[type='submit']"{% if is_modal %} hx-post="{{ form_action }}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>
+  {% csrf_token %}
+  <div class="task-form-actions"><a class="app-button secondary" data-task-initial-focus href="{% url 'tasks:detail' project.pk task.pk %}"{% if is_modal %} hx-get="{% url 'tasks:detail' project.pk task.pk %}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>Keep task</a><button class="app-button destructive" type="submit">Delete task</button></div>
+</form>

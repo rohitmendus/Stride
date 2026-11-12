@@ -41,10 +41,7 @@ def project_list(request):
     )
 
 
-@require_GET
-@never_cache
-def project_detail(request, pk):
-    project = get_object_or_404(_projects_for(request.user), pk=pk)
+def _board_context(project):
     context = _project_context(project, "board")
     columns = {
         status: {"status": status, "label": label, "tasks": []}
@@ -54,7 +51,14 @@ def project_detail(request, pk):
     for task in tasks:
         columns[task.status]["tasks"].append(task)
     context.update(columns=list(columns.values()), task_count=len(tasks))
-    return render(request, "projects/detail.html", context)
+    return context
+
+
+@require_GET
+@never_cache
+def project_detail(request, pk):
+    project = get_object_or_404(_projects_for(request.user), pk=pk)
+    return render(request, "projects/detail.html", _board_context(project))
 
 
 @require_GET

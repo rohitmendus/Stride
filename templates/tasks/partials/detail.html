@@ -1,0 +1,4 @@
+{% include "tasks/partials/heading.html" %}
+<div class="task-readonly"><h2>{{ task.title }}</h2><div class="project-copy">{{ task.description|default:"No description yet."|linebreaksbr }}</div>
+<dl class="task-facts"><div><dt>Status</dt><dd>{{ task.get_status_display }}</dd></div><div><dt>Priority</dt><dd>{{ task.get_priority_display }}</dd></div><div><dt>Deadline</dt><dd>{{ task.deadline|date:"M j, Y" }}</dd></div><div><dt>Assignee</dt><dd>{% if task.assigned_to %}{{ task.assigned_to.get_full_name|default:task.assigned_to.email }}{% else %}Unassigned{% endif %}</dd></div><div><dt>Created by</dt><dd>{{ task.created_by.get_full_name|default:task.created_by.email }}</dd></div></dl>
+<p class="task-readonly-note">View only</p>{% if is_modal %}<div class="task-form-actions"><button type="button" class="app-button secondary" data-close-task-dialog>Close</button></div>{% endif %}</div>

@@ -1,7 +1,6 @@
 {% extends "workspace/base.html" %}
 {% block title %}{{ project.title }} · Stride{% endblock %}
 {% block workspace_content %}
-<div class="board-summary"><span>{{ task_count }} task{{ task_count|pluralize }}</span><span>Read-only board</span></div>
-<div class="workspace-board" aria-label="Project task board">{% for column in columns %}<section class="workspace-column" data-task-status="{{ column.status }}" aria-labelledby="column-{{ column.status }}"><header><h2 id="column-{{ column.status }}">{{ column.label }}</h2><span>{{ column.tasks|length }}</span></header><div class="workspace-column-cards">{% for task in column.tasks %}{% include "projects/partials/task_card.html" with task=task only %}{% empty %}<p class="workspace-column-empty">No tasks yet.</p>{% endfor %}</div></section>{% endfor %}</div>
-<p class="workspace-board-note">Task editing and drag-and-drop are coming next.</p>
+{% include "projects/partials/board.html" %}
+<p class="workspace-board-note">Drag-and-drop is coming next.</p>
 {% endblock %}
