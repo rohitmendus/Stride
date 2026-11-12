@@ -88,7 +88,7 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - `/` and `/projects/`: only projects you belong to. New accounts start with an empty workspace, not demo projects.
 - `/projects/new/`: create a project with a title, description, and deadline. The server sets its owner to the signed-in user.
 - `/projects/<id>/`: project task board with creation, details, editing, and deletion dialogs. Tasks appear in To Do, In Progress, Review, and Completed; no demo tasks are inserted into the live workspace.
-- `/projects/<id>/members/`: existing project members and their roles.
+- `/projects/<id>/members/`: project admins can add existing active users by email, change Admin/Member roles, and remove members after confirmation. Members can view the team without management controls. The owner cannot be demoted or removed; self-removal is disabled. Removing a member keeps their tasks but clears their assignments. Changes use HTMX and update member counts and bottom notifications without reloading the page.
 - `/projects/<id>/settings/`: project details, the existing admin edit action, and owner-only deletion. Members can read settings without gaining edit permission.
 - `/projects/<id>/edit/`: update project details; ownership and membership fields cannot be submitted through this form.
 - `/projects/<id>/delete/`: owner-only confirmation page. Only a CSRF-protected POST deletes the project and its tasks.
@@ -115,6 +115,6 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - `/projects/my-tasks/` is the cross-project assignment list, with search and priority filtering. Rows identify their project and use the same authorized task dialogs. Reassigning a task away removes it from My Tasks and updates the global assignment count. This is separate from a project's all-assignee Board/List view.
 - Search, filters and list selection use GET query parameters and scoped server-rendered fragments. Saving/editing/deleting retains the originating project or personal list and its filters; ordinary forms also return to that workspace. Success/status changes appear in the bottom toast, with a persistent save indicator and accessible announcements.
 
-Adding/removing members and dashboard charts remain deferred. The member list is still read-only.
+Dashboard counts and charts remain deferred. Member management adds existing accounts; email invitations are not implemented.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.

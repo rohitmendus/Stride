@@ -4,6 +4,7 @@
 
   let toastTimer;
   let savedTaskFocus = null;
+  let memberFocus = false;
   window.strideNotify = (message, announcement = message, saved = true) => {
     const toast = document.getElementById("workspace-toast");
     if (toast) {
@@ -71,6 +72,11 @@
     }
   });
   document.addEventListener("htmx:afterSettle", (event) => {
+    if (event.detail.target.id === "project-members") {
+      const invalid = document.querySelector('#project-members [aria-invalid="true"]');
+      if (invalid || memberFocus) (invalid || document.getElementById("members-heading"))?.focus();
+      memberFocus = false;
+    }
     if (savedTaskFocus !== null) {
       const task = document.querySelector(`[data-task-id="${savedTaskFocus}"]`);
       (task || document.getElementById("new-task") || document.getElementById("project-board"))?.focus();
@@ -96,6 +102,10 @@
   });
   document.addEventListener("taskMoved", (event) => {
     window.strideNotify(event.detail.message, event.detail.announcement);
+  });
+  document.addEventListener("memberSaved", (event) => {
+    memberFocus = true;
+    window.strideNotify(event.detail.message);
   });
   document.addEventListener("htmx:beforeSwap", () => {
     document.getElementById("workspace-navigation")?.close();

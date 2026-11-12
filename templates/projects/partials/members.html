@@ -1,0 +1,22 @@
+{% if refresh_header %}{% include "projects/partials/header.html" with header_oob=True %}{% endif %}
+<section id="project-members" class="members-panel" aria-labelledby="members-heading">
+  <header class="section-heading"><h2 id="members-heading" tabindex="-1">The people behind it</h2><span>{{ memberships|length }} member{{ memberships|length|pluralize }}</span></header>
+  {% if project.current_role == 'admin' %}
+  <form class="member-add-form" method="post" action="{% url 'projects:members' project.pk %}" hx-post="{% url 'projects:members' project.pk %}" hx-target="#project-members" hx-swap="outerHTML" hx-push-url="false" hx-disabled-elt="find button" novalidate>
+    {% csrf_token %}{% if member_form.non_field_errors %}<div class="app-errors" role="alert">{{ member_form.non_field_errors }}</div>{% endif %}
+    {% for field in member_form %}{% include "components/form_field.html" with field=field only %}{% endfor %}
+    <button class="app-button primary" type="submit">Add member</button>
+  </form>
+  {% endif %}
+  {% if member_error %}<p class="app-errors" role="alert">{{ member_error }}</p>{% endif %}
+  <div class="member-rows">{% for membership in memberships %}
+    <div class="member-row" data-member-id="{{ membership.pk }}"><span class="app-avatar" aria-hidden="true">{{ membership.user.first_name|default:membership.user.email|slice:":1"|upper }}</span><div class="member-info"><strong>{{ membership.user.get_full_name|default:membership.user.email }}</strong><small>{{ membership.user.email }}</small></div>
+    {% if membership.user_id == project.owner_id %}<span class="member-role">Owner</span>
+    {% elif project.current_role == 'admin' %}
+    <form class="member-role-form" method="post" action="{% url 'projects:member_role' project.pk membership.pk %}" hx-post="{% url 'projects:member_role' project.pk membership.pk %}" hx-target="#project-members" hx-swap="outerHTML" hx-push-url="false" hx-disabled-elt="find button">
+      {% csrf_token %}<select name="role" id="member-role-{{ membership.pk }}" aria-label="Role for {{ membership.user.email }}">{% for value,label in member_roles %}<option value="{{ value }}"{% if membership.role == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="text-button" type="submit">Save role</button>
+    </form>
+    {% if membership.user_id != request.user.pk %}<a class="member-remove" href="{% url 'projects:member_remove' project.pk membership.pk %}">Remove</a>{% endif %}
+    {% else %}<span class="member-role">{{ membership.get_role_display }}</span>{% endif %}</div>
+  {% endfor %}</div>
+</section>

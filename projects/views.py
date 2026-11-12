@@ -1,7 +1,8 @@
+import json
 from urllib.parse import urlencode
 
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,11 +10,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.cache import patch_vary_headers
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from tasks.models import Task
 
-from .forms import ProjectForm
+from .forms import AddMemberForm, MemberRoleForm, ProjectForm
 from .models import Project, ProjectMembership
 
 
@@ -218,12 +219,120 @@ def project_detail(request, pk):
     return response
 
 
-@require_GET
+def _managed_project(request, pk):
+    projects = _projects_for(request.user)
+    if request.method == "POST":
+        projects = projects.select_for_update(of=("self",))
+    project = get_object_or_404(projects, pk=pk)
+    memberships = project.memberships.order_by("pk")
+    if request.method == "POST":
+        memberships = memberships.select_for_update()
+    actor = next(
+        (member for member in memberships if member.user_id == request.user.pk), None
+    )
+    if actor is None or actor.role != ProjectMembership.Role.ADMIN:
+        raise PermissionDenied
+    project.current_role = actor.role
+    return project
+
+
+def _render_members(request, project, form=None, **extra):
+    context = _project_context(project, "members")
+    context.update(
+        member_form=form if form is not None else AddMemberForm(project=project),
+        member_roles=ProjectMembership.Role.choices,
+        **extra,
+    )
+    partial = (
+        request.headers.get("HX-Request") == "true"
+        and request.headers.get("HX-Target") == "project-members"
+    )
+    context["refresh_header"] = partial
+    response = render(
+        request,
+        "projects/partials/members.html" if partial else "projects/members.html",
+        context,
+    )
+    patch_vary_headers(response, ("HX-Request", "HX-Target"))
+    return response
+
+
+def _member_saved(request, project, message):
+    project.current_role = project.memberships.get(user=request.user).role
+    if (
+        request.headers.get("HX-Request") == "true"
+        and request.headers.get("HX-Target") == "project-members"
+    ):
+        response = _render_members(request, project)
+        response["HX-Trigger-After-Swap"] = json.dumps(
+            {"memberSaved": {"message": message}}
+        )
+        response["HX-Push-Url"] = reverse("projects:members", args=[project.pk])
+        return response
+    messages.success(request, message)
+    return redirect("projects:members", pk=project.pk)
+
+
+@require_http_methods(["GET", "POST"])
 @never_cache
+@transaction.atomic
 def project_members(request, pk):
-    project = get_object_or_404(_projects_for(request.user), pk=pk)
+    project = (
+        _managed_project(request, pk)
+        if request.method == "POST"
+        else get_object_or_404(_projects_for(request.user), pk=pk)
+    )
+    form = AddMemberForm(
+        request.POST if request.method == "POST" else None, project=project
+    )
+    if request.method == "POST" and form.is_valid():
+        membership = ProjectMembership(
+            project=project, user=form.selected_user, role=form.cleaned_data["role"]
+        )
+        try:
+            membership.save()
+        except ValidationError as error:
+            form.add_error(None, error.messages)
+        else:
+            return _member_saved(request, project, "Member added")
+    return _render_members(request, project, form)
+
+
+@require_POST
+@never_cache
+@transaction.atomic
+def member_role(request, pk, member_pk):
+    project = _managed_project(request, pk)
+    membership = get_object_or_404(project.memberships, pk=member_pk)
+    if membership.user_id == project.owner_id:
+        raise PermissionDenied
+    form = MemberRoleForm(request.POST)
+    if not form.is_valid():
+        return _render_members(request, project, member_error="Choose a valid role.")
+    membership.role = form.cleaned_data["role"]
+    membership.save()
+    return _member_saved(request, project, "Member role updated")
+
+
+@require_http_methods(["GET", "POST"])
+@never_cache
+@transaction.atomic
+def member_remove(request, pk, member_pk):
+    project = _managed_project(request, pk)
+    membership = get_object_or_404(
+        project.memberships.select_related("user"), pk=member_pk
+    )
+    if membership.user_id in (project.owner_id, request.user.pk):
+        raise PermissionDenied
+    if request.method == "POST":
+        membership.delete()
+        return _member_saved(
+            request, project, "Member removed. Their tasks are now unassigned."
+        )
     return render(
-        request, "projects/members.html", _project_context(project, "members")
+        request,
+        "projects/confirm_remove_member.html",
+        _project_context(project, "members") | {"membership": membership},
     )
 
 
@@ -258,10 +367,11 @@ def project_create(request):
 @never_cache
 @transaction.atomic
 def project_edit(request, pk):
-    projects = _projects_for(request.user)
-    if request.method == "POST":
-        projects = projects.select_for_update(of=("self",))
-    project = get_object_or_404(projects, pk=pk)
+    project = (
+        _managed_project(request, pk)
+        if request.method == "POST"
+        else get_object_or_404(_projects_for(request.user), pk=pk)
+    )
     if project.current_role != ProjectMembership.Role.ADMIN:
         raise PermissionDenied
     form = ProjectForm(

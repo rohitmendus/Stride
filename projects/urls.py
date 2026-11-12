@@ -9,6 +9,14 @@ urlpatterns = [
     path("my-tasks/", views.my_tasks, name="my_tasks"),
     path("<int:pk>/", views.project_detail, name="detail"),
     path("<int:pk>/members/", views.project_members, name="members"),
+    path(
+        "<int:pk>/members/<int:member_pk>/role/", views.member_role, name="member_role"
+    ),
+    path(
+        "<int:pk>/members/<int:member_pk>/remove/",
+        views.member_remove,
+        name="member_remove",
+    ),
     path("<int:pk>/settings/", views.project_settings, name="settings"),
     path("<int:pk>/edit/", views.project_edit, name="edit"),
     path("<int:pk>/delete/", views.project_delete, name="delete"),

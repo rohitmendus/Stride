@@ -1,0 +1,5 @@
+{% extends "workspace/base.html" %}
+{% block title %}Remove member · {{ project.title }} · Stride{% endblock %}
+{% block workspace_content %}
+<section id="project-members" class="delete-page"><p class="app-eyebrow">PROJECT MEMBERS</p><h1>Remove member?</h1><p><strong>{{ membership.user.get_full_name|default:membership.user.email }}</strong> will lose access to this project. Their assigned tasks will stay in the project and become unassigned.</p><form method="post" action="{% url 'projects:member_remove' project.pk membership.pk %}" hx-post="{% url 'projects:member_remove' project.pk membership.pk %}" hx-target="#project-members" hx-swap="outerHTML" hx-push-url="false" hx-disabled-elt="find button">{% csrf_token %}<div class="form-actions"><a class="app-button secondary" href="{% url 'projects:members' project.pk %}">Keep member</a><button class="app-button destructive" type="submit">Remove member</button></div></form></section>
+{% endblock %}
