@@ -41,7 +41,7 @@ def project_list(request):
     )
 
 
-def _board_context(project):
+def _board_context(project, user):
     context = _project_context(project, "board")
     columns = {
         status: {"status": status, "label": label, "tasks": []}
@@ -49,6 +49,10 @@ def _board_context(project):
     }
     tasks = list(project.tasks.select_related("assigned_to"))
     for task in tasks:
+        task.can_manage = (
+            project.current_role == ProjectMembership.Role.ADMIN
+            or user.pk in (task.created_by_id, task.assigned_to_id)
+        )
         columns[task.status]["tasks"].append(task)
     context.update(columns=list(columns.values()), task_count=len(tasks))
     return context
@@ -58,7 +62,9 @@ def _board_context(project):
 @never_cache
 def project_detail(request, pk):
     project = get_object_or_404(_projects_for(request.user), pk=pk)
-    return render(request, "projects/detail.html", _board_context(project))
+    return render(
+        request, "projects/detail.html", _board_context(project, request.user)
+    )
 
 
 @require_GET

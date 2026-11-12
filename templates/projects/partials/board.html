@@ -1,4 +1,5 @@
 <div id="project-board"{% if board_oob %} hx-swap-oob="outerHTML"{% endif %}>
   <div class="board-toolbar"><span>{{ task_count }} task{{ task_count|pluralize }}</span><a class="app-button primary" id="new-task" href="{% url 'tasks:create' project.pk %}" hx-get="{% url 'tasks:create' project.pk %}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false"><span aria-hidden="true">+</span> New task</a></div>
   <div class="workspace-board" aria-label="Project task board">{% for column in columns %}<section class="workspace-column" data-task-status="{{ column.status }}" aria-labelledby="column-{{ column.status }}"><header><h2 id="column-{{ column.status }}">{{ column.label }}</h2><span>{{ column.tasks|length }}</span></header><div class="workspace-column-cards">{% for task in column.tasks %}{% include "projects/partials/task_card.html" with task=task project=project only %}{% empty %}<p class="workspace-column-empty">No tasks yet.</p>{% endfor %}</div></section>{% endfor %}</div>
+  <p class="workspace-board-note" id="board-move-help" hidden>Drag a task’s handle to move it. On a focused handle, use ↑ ↓ to reorder and ← → to change columns.</p>
 </div>

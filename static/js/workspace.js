@@ -55,7 +55,7 @@
     document.getElementById("task-dialog")?.close();
     const id = Number(event.detail.task_id);
     const task = id > 0 ? document.querySelector(`[data-task-id="${id}"]`) : null;
-    (task || document.getElementById("new-task"))?.focus();
+    (task?.querySelector(".task-card-link") || task || document.getElementById("new-task"))?.focus();
     const status = document.getElementById("task-live-status");
     if (status) status.textContent = event.detail.message;
   });

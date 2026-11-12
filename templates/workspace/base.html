@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'css/workspace.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/workspace.css' %}"><script src="{% static 'vendor/sortable.min.js' %}" defer></script>{% endblock %}
 {% block content %}
 <a class="skip-link" href="#main-content">Skip to content</a>
 <div class="app-shell" hx-boost="true" hx-push-url="true" hx-history="false" hx-swap="innerHTML show:top">
@@ -14,4 +14,4 @@
   <span class="task-live-status" id="task-live-status" role="status"></span>
 </div>
 {% endblock %}
-{% block extra_scripts %}<script src="{% static 'js/workspace.js' %}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{% static 'js/workspace.js' %}" defer></script><script src="{% static 'js/board.js' %}" defer></script>{% endblock %}

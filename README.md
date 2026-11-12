@@ -23,7 +23,7 @@ uv run django-admin startapp tasks
 - `templates/components/`: reusable brand, messages, and form-field includes.
 - `templates/accounts/`: shared authentication layout and form/logout partials.
 - `templates/core/partials/`: small HTML fragments reused by full pages and HTMX responses.
-- `static/`: application CSS and locally served HTMX 2.0.11, including its license.
+- `static/`: application CSS, HTMX 2.0.11, and SortableJS 1.15.7, served locally with their licenses. No CDN or JavaScript build step is required.
 - `templates/workspace/` and `templates/projects/`: reusable application layout, sidebar, project cards, forms, and detail screens.
 - `index.html` and `assets/`: simplified standalone Kanban design preview with browser-local demo tasks, not the database-backed app.
 
@@ -107,7 +107,11 @@ Do not add `-v` to `down` unless you intend to erase this new database. Source e
 - Task dialogs use shared form/detail partials and HTMX. Successful mutations return a fresh board through an out-of-band swap, retaining the page and project header. Ordinary full-page forms also work without JavaScript.
 - Dialogs support keyboard focus, Escape/cancel, safe confirmation focus, reduced motion, and draft-preserving failure feedback. After a save, focus moves to the refreshed task; after deletion, it moves to New task.
 - Writes lock the project, its memberships, and the edited task inside a transaction. New tasks and status changes append to their destination column; completion timestamps follow the model's existing rules.
+- Task handles support mouse dragging and touch long-press dragging between columns and within a column. Focus a handle and use Up/Down to reorder or Left/Right to change columns. Handles appear only for tasks the current user can manage; the server checks permissions again on every move.
+- `/projects/<id>/tasks/<task-id>/move/`: CSRF-protected POST accepting a valid `status` and optional `before_id` destination task. The server derives positions, rejects stale/out-of-project insertion points, and saves status, order, and completion timestamps atomically. Moves do not modify titles, assignments, or other task fields.
+- The board shows its last confirmed layout while a move saves, then renders the server's fresh board without navigating away. Focus returns to the moved handle and its column/position is announced. Failed moves show a refresh notice and disable further drag/keyboard moves until the board is refreshed; uncertain writes are not retried automatically.
+- Drag controls reinitialize after navigation and task dialog saves. Reduced motion disables sorting animation. Without JavaScript, task links and full-page forms remain available to change status.
 
-Adding/removing members, drag-and-drop persistence, and dashboard charts remain deferred. The member list is still read-only.
+Adding/removing members and dashboard charts remain deferred. The member list is still read-only.
 
 This is a development configuration. Secure cookie flags default to false for local HTTP and must be enabled for an HTTPS deployment.

@@ -36,3 +36,10 @@ class TaskForm(forms.ModelForm):
         self.fields["assigned_to"].empty_label = "Unassigned"
         if not self.instance.pk and self.initial.get("deadline") is None:
             self.initial["deadline"] = project.deadline
+
+
+class TaskMoveForm(forms.Form):
+    status = forms.ChoiceField(choices=Task.Status.choices)
+    before_id = forms.IntegerField(
+        required=False, min_value=1, max_value=9_223_372_036_854_775_807
+    )

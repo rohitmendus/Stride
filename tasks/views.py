@@ -1,20 +1,20 @@
 import json
 
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Max
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.cache import patch_vary_headers
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from projects.models import ProjectMembership
 from projects.views import _board_context, _projects_for
 
-from .forms import TaskForm
+from .forms import TaskForm, TaskMoveForm
 from .models import Task
 
 
@@ -61,7 +61,7 @@ def _saved(request, project, task_id=None, deleted=False):
     if not _is_modal(request):
         messages.success(request, message)
         return redirect("projects:detail", pk=project.pk)
-    context = _board_context(project)
+    context = _board_context(project, request.user)
     context["board_oob"] = True
     response = render(request, "projects/partials/board.html", context)
     response["HX-Trigger-After-Swap"] = json.dumps(
@@ -193,3 +193,79 @@ def task_delete(request, project_pk, pk):
         heading="Delete this task?",
         form_action=reverse("tasks:delete", args=[project.pk, task.pk]),
     )
+
+
+@require_POST
+@never_cache
+@transaction.atomic
+def task_move(request, project_pk, pk):
+    project = _project(request, project_pk)
+    task = _task(request, project, pk)
+    if not _can_manage(request.user, project, task):
+        raise PermissionDenied
+    form = TaskMoveForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse(
+            {"error": "Choose a valid column and position."}, status=400
+        )
+    status = form.cleaned_data["status"]
+    before_id = form.cleaned_data["before_id"]
+    neighbors = list(
+        project.tasks.select_for_update()
+        .filter(status__in=(task.status, status))
+        .exclude(pk=task.pk)
+    )
+    destination = [neighbor for neighbor in neighbors if neighbor.status == status]
+    index = len(destination)
+    if before_id is not None:
+        index = next(
+            (i for i, neighbor in enumerate(destination) if neighbor.pk == before_id),
+            None,
+        )
+        if index is None:
+            return JsonResponse(
+                {"error": "The board changed. Refresh and try again."}, status=409
+            )
+    source = [neighbor for neighbor in neighbors if neighbor.status == task.status]
+    previous_status = task.status
+    task.status = status
+    task.position = index
+    try:
+        task.save(update_fields={"status", "position", "updated_at"})
+    except ValidationError:
+        return JsonResponse(
+            {"error": "Update the task details before moving it."}, status=400
+        )
+    destination.insert(index, task)
+    changed = []
+    columns = [destination] if previous_status == status else [source, destination]
+    for column in columns:
+        for position, neighbor in enumerate(column):
+            if neighbor.position != position:
+                neighbor.position = position
+                changed.append(neighbor)
+    # Only server-derived positions bypass model save hooks.
+    Task.objects.bulk_update(changed, ["position"])
+    if (
+        request.headers.get("HX-Request") == "true"
+        and request.headers.get("HX-Target") == "project-board"
+    ):
+        response = render(
+            request,
+            "projects/partials/board.html",
+            _board_context(project, request.user),
+        )
+        response["HX-Trigger-After-Swap"] = json.dumps(
+            {
+                "taskMoved": {
+                    "task_id": task.pk,
+                    "message": (
+                        f"Task moved to {task.get_status_display()}, "
+                        f"position {task.position + 1}."
+                    ),
+                }
+            }
+        )
+        return response
+    messages.success(request, "Task moved.")
+    return redirect("projects:detail", pk=project.pk)
