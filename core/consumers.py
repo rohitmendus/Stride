@@ -63,6 +63,12 @@ class DashboardConsumer(AsyncJsonWebsocketConsumer):
             return
         await self.send_json({"type": "dashboard.changed"})
 
+    async def notifications_changed(self, event):
+        if not await self.session_valid():
+            await self.close(code=4401)
+            return
+        await self.send_json({"type": "notifications.changed"})
+
     async def disconnect(self, code):
         if self.watcher:
             self.watcher.cancel()

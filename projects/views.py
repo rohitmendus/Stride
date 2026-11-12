@@ -12,6 +12,7 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from core.notifications import project_member_added
 from tasks.models import Task
 
 from .forms import AddMemberForm, MemberRoleForm, ProjectForm
@@ -306,6 +307,7 @@ def project_members(request, pk):
         except ValidationError as error:
             form.add_error(None, error.messages)
         else:
+            project_member_added(membership, request.user)
             return _member_saved(request, project, "Member added")
     return _render_members(request, project, form)
 

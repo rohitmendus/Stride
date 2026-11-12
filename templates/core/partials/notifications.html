@@ -1,0 +1,19 @@
+<details class="notification-menu">
+  <summary class="notification-toggle" data-notification-action="toggle" aria-label="Notifications{% if notification_unread_count %}, {{ notification_unread_count }} unread{% endif %}" aria-controls="notification-panel">
+    <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+    <span class="notification-badge" data-notification-count{% if not notification_unread_count %} hidden{% endif %} aria-hidden="true">{{ notification_unread_count }}</span>
+  </summary>
+  <section class="notification-panel" id="notification-panel" aria-labelledby="notification-title">
+    <header><h2 id="notification-title">Notifications</h2><form action="{% url 'core:notifications_read_all' %}" method="post" hx-post="{% url 'core:notifications_read_all' %}" hx-target="#workspace-notifications" hx-swap="innerHTML" hx-push-url="false">{% csrf_token %}<button type="submit" class="notification-read-all" data-notification-action="read-all"{% if not notification_unread_count %} disabled{% endif %}>Mark all as read</button></form></header>
+    <div class="notification-list">
+      {% for notification in notification_items %}
+      <form action="{% url 'core:notification_open' notification.pk %}" method="post" hx-boost="false">
+        {% csrf_token %}
+        <button type="submit" class="notification-entry{% if not notification.read_at %} is-unread{% endif %}" data-notification-id="{{ notification.pk }}" aria-label="{% if not notification.read_at %}Unread: {% endif %}{{ notification.message }}">
+          <span>{{ notification.message }}</span><small>{{ notification.created_at|timesince }} ago</small>{% if not notification.read_at %}<i class="notification-dot" aria-hidden="true"></i>{% endif %}
+        </button>
+      </form>
+      {% empty %}<p class="notification-empty">You're all caught up. New notifications will appear here.</p>{% endfor %}
+    </div>
+  </section>
+</details>

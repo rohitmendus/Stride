@@ -132,6 +132,12 @@ class DashboardSocketTests(TransactionTestCase):
                 self.assertEqual(
                     await socket.receive_json_from(), {"type": "dashboard.changed"}
                 )
+                await get_channel_layer().group_send(
+                    f"dashboard.user.{self.owner.pk}", {"type": "notifications.changed"}
+                )
+                self.assertEqual(
+                    await socket.receive_json_from(), {"type": "notifications.changed"}
+                )
                 await database_sync_to_async(
                     Session.objects.filter(session_key=session_key).delete
                 )()

@@ -109,7 +109,7 @@
     window.strideNotify(event.detail.message);
   });
   document.addEventListener("htmx:beforeSwap", (event) => {
-    if (event.detail.target?.id === "dashboard-content") return;
+    if (["dashboard-content", "workspace-notifications"].includes(event.detail.target?.id)) return;
     document.getElementById("workspace-navigation")?.close();
   });
   window.matchMedia("(min-width: 761px)").addEventListener("change", (event) => {

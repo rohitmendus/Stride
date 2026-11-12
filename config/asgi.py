@@ -35,6 +35,7 @@ application = ProtocolTypeRouter(
                 URLRouter(
                     [
                         path("ws/dashboard/", DashboardConsumer.as_asgi()),
+                        path("ws/workspace/", DashboardConsumer.as_asgi()),
                     ]
                 )
             )

@@ -17,18 +17,16 @@ from tasks.models import Task
 logger = logging.getLogger(__name__)
 
 
-async def _broadcast(user_ids):
+async def _broadcast(user_ids, event_type):
     async with asyncio.timeout(2):
         layer = get_channel_layer()
         for user_id in user_ids:
-            await layer.group_send(
-                f"dashboard.user.{user_id}", {"type": "dashboard.changed"}
-            )
+            await layer.group_send(f"dashboard.user.{user_id}", {"type": event_type})
 
 
-def _publish(user_ids):
+def _publish(user_ids, event_type="dashboard.changed"):
     try:
-        async_to_sync(_broadcast)(user_ids)
+        async_to_sync(_broadcast)(user_ids, event_type)
     except (RedisError, OSError, ChannelFull):
         logger.warning("Dashboard notification unavailable.")
 

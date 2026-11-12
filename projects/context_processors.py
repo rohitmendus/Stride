@@ -1,3 +1,4 @@
+from core.notifications import notification_context
 from tasks.models import Task
 
 from .models import Project
@@ -18,6 +19,7 @@ def workspace_navigation(request):
         or request.user.email[0].upper()
     )
     return {
+        **notification_context(request.user),
         "sidebar_user_initials": initials,
         "sidebar_my_task_count": Task.objects.filter(
             project__memberships__user=request.user,

@@ -2,8 +2,9 @@
   if (window.strideDashboardEvents) return;
   window.strideDashboardEvents = true;
   let board = null;
+  let workspace = null;
   let socket = null;
-  let reconnectTimer, refreshTimer, heartbeatTimer;
+  let reconnectTimer, refreshTimer, heartbeatTimer, notificationTimer;
   let attempts = 0;
   let dirty = false;
   let inFlight = false;
@@ -23,19 +24,28 @@
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(flush, 100);
   };
+  const refreshNotifications = () => {
+    clearTimeout(notificationTimer);
+    notificationTimer = setTimeout(() => {
+      const root = document.getElementById('workspace-notifications');
+      if (root?.isConnected && !document.hidden) htmx.trigger(root, 'notificationsChanged');
+    }, 100);
+  };
   const stop = () => {
     clearTimeout(reconnectTimer);
     clearTimeout(refreshTimer);
     clearTimeout(heartbeatTimer);
+    clearTimeout(notificationTimer);
     const old = socket;
     socket = null;
     old?.close();
     board = null;
+    workspace = null;
     inFlight = dirty = false;
   };
   const connect = () => {
-    if (!board?.isConnected || socket || sessionEnded || !window.WebSocket) return;
-    const url = new URL(board.dataset.dashboardSocket, location.href);
+    if (!workspace?.isConnected || socket || sessionEnded || !window.WebSocket) return;
+    const url = new URL(workspace.dataset.workspaceSocket, location.href);
     url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(url);
     socket = ws;
@@ -50,6 +60,7 @@
       connectionStatus();
       heartbeat();
       refresh();
+      refreshNotifications();
     };
     ws.onmessage = (event) => {
       if (socket !== ws) return;
@@ -57,7 +68,11 @@
       try { message = JSON.parse(event.data); } catch { return; }
       heartbeat();
       if (message.type === 'ping') ws.send(JSON.stringify({type: 'pong'}));
-      if (message.type === 'dashboard.changed') refresh();
+      if (message.type === 'dashboard.changed') {
+        refresh();
+        refreshNotifications();
+      }
+      if (message.type === 'notifications.changed') refreshNotifications();
     };
     ws.onclose = (event) => {
       if (socket !== ws) return;
@@ -67,20 +82,23 @@
       if (event.code === 4401) {
         sessionEnded = true;
         refresh();
+        refreshNotifications();
         return;
       }
       reconnectTimer = setTimeout(connect, Math.min(1000 * 2 ** attempts++, 30000));
     };
   };
   const init = () => {
-    const next = document.getElementById('dashboard-content');
-    if (next !== board) {
+    const next = document.querySelector('[data-workspace-socket]');
+    if (next !== workspace) {
       stop();
-      board = next;
+      workspace = next;
+      board = document.getElementById('dashboard-content');
       sessionEnded = false;
       attempts = 0;
       connect();
     }
+    board = document.getElementById('dashboard-content');
     connectionStatus();
   };
   const isRefresh = (event) => event.detail.target?.id === 'dashboard-content';
@@ -108,7 +126,7 @@
   });
   document.addEventListener('htmx:afterSettle', init);
   document.addEventListener('htmx:beforeCleanupElement', (event) => {
-    if (event.detail.elt === board) stop();
+    if (event.detail.elt === workspace) stop();
   });
   window.addEventListener('pagehide', stop);
   window.addEventListener('pageshow', init);

@@ -11,6 +11,7 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from core.notifications import task_assigned
 from projects.models import ProjectMembership
 from projects.views import (
     _board_context,
@@ -165,6 +166,7 @@ def task_create(request, project_pk):
     if request.method == "POST" and form.is_valid():
         _append_position(task)
         task.save()
+        task_assigned(task, request.user)
         return _saved(request, project, task.pk, created=True)
     return _render_task(
         request,
@@ -205,6 +207,7 @@ def task_edit(request, project_pk, pk):
     if not _can_manage(request.user, project, task):
         raise PermissionDenied
     previous_status = task.status
+    previous_assignee_id = task.assigned_to_id
     form = TaskForm(
         request.POST if request.method == "POST" else None,
         project=project,
@@ -214,6 +217,7 @@ def task_edit(request, project_pk, pk):
         if task.status != previous_status:
             _append_position(task)
         task.save()
+        task_assigned(task, request.user, previous_assignee_id)
         return _saved(
             request,
             project,
