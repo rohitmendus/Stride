@@ -10,10 +10,10 @@ class TaskForm(forms.ModelForm):
         fields = (
             "title",
             "description",
-            "assigned_to",
-            "priority",
-            "deadline",
             "status",
+            "priority",
+            "assigned_to",
+            "deadline",
         )
         labels = {"assigned_to": "Assignee"}
         widgets = {

@@ -4,7 +4,7 @@
   {% if form.non_field_errors %}<div class="app-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
   {% for field in form %}{% include "components/form_field.html" with field=field only %}{% endfor %}
   <footer class="task-form-footer">
-    <div>{% if can_delete %}<a class="task-delete-link" href="{% url 'tasks:delete' project.pk task.pk %}"{% if is_modal %} hx-get="{% url 'tasks:delete' project.pk task.pk %}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>Delete task</a>{% endif %}</div>
-    <div class="task-form-actions">{% if is_modal %}<button class="app-button secondary" type="button" data-close-task-dialog>Cancel</button>{% else %}<a class="app-button secondary" href="{% url 'projects:detail' project.pk %}">Cancel</a>{% endif %}<button class="app-button primary" type="submit">{{ submit_label }}</button></div>
+    <div>{% if can_delete %}<a class="task-delete-link" href="{% url 'tasks:delete' project.pk task.pk %}?{{ board_query }}"{% if is_modal %} hx-get="{% url 'tasks:delete' project.pk task.pk %}?{{ board_query }}" hx-target="#task-dialog-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>Delete task</a>{% endif %}</div>
+    <div class="task-form-actions">{% if is_modal %}<button class="app-button secondary" type="button" data-close-task-dialog>Cancel</button>{% else %}<a class="app-button secondary" href="{{ return_url }}">Cancel</a>{% endif %}<button class="app-button primary" type="submit">{{ submit_label }}</button></div>
   </footer>
 </form>

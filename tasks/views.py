@@ -12,7 +12,12 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from projects.models import ProjectMembership
-from projects.views import _board_context, _projects_for
+from projects.views import (
+    _board_context,
+    _board_query,
+    _my_tasks_context,
+    _projects_for,
+)
 
 from .forms import TaskForm, TaskMoveForm
 from .models import Task
@@ -47,8 +52,36 @@ def _project(request, project_pk):
     return project
 
 
+def _task_url(request, name, *args):
+    url = reverse(name, args=args)
+    query = _board_query(request.GET)
+    return f"{url}?{query}" if query else url
+
+
+def _return_url(request, project):
+    if request.GET.get("workspace") == "mine":
+        return _task_url(request, "projects:my_tasks")
+    return _task_url(request, "projects:detail", project.pk)
+
+
+def _workspace(request, project):
+    if request.GET.get("workspace") == "mine":
+        return _my_tasks_context(
+            request.user, request.GET
+        ), "projects/partials/my_tasks.html"
+    return _board_context(
+        project, request.user, request.GET
+    ), "projects/partials/board.html"
+
+
 def _render_task(request, project, partial, **context):
-    context.update(project=project, partial=partial, is_modal=_is_modal(request))
+    context.update(
+        project=project,
+        partial=partial,
+        is_modal=_is_modal(request),
+        board_query=_board_query(request.GET),
+        return_url=_return_url(request, project),
+    )
     response = render(
         request, partial if context["is_modal"] else "tasks/page.html", context
     )
@@ -56,14 +89,23 @@ def _render_task(request, project, partial, **context):
     return response
 
 
-def _saved(request, project, task_id=None, deleted=False):
-    message = "Task deleted." if deleted else "Task saved."
+def _saved(
+    request, project, task_id=None, *, deleted=False, created=False, status=None
+):
+    if deleted:
+        message = "Task deleted"
+    elif created:
+        message = "Task added to the board"
+    elif status:
+        message = f"Moved to {Task.Status(status).label}"
+    else:
+        message = "Task updated"
     if not _is_modal(request):
         messages.success(request, message)
-        return redirect("projects:detail", pk=project.pk)
-    context = _board_context(project, request.user)
+        return redirect(_return_url(request, project))
+    context, template = _workspace(request, project)
     context["board_oob"] = True
-    response = render(request, "projects/partials/board.html", context)
+    response = render(request, template, context)
     response["HX-Trigger-After-Swap"] = json.dumps(
         {"taskSaved": {"task_id": task_id, "message": message}}
     )
@@ -103,7 +145,7 @@ def _edit_response(request, project, task, form):
         can_delete=True,
         heading="Task details",
         submit_label="Save changes",
-        form_action=reverse("tasks:edit", args=[project.pk, task.pk]),
+        form_action=_task_url(request, "tasks:edit", project.pk, task.pk),
     )
 
 
@@ -113,6 +155,8 @@ def _edit_response(request, project, task, form):
 def task_create(request, project_pk):
     project = _project(request, project_pk)
     task = Task(project=project, created_by=request.user)
+    if request.method == "GET" and request.GET.get("status") in Task.Status.values:
+        task.status = request.GET["status"]
     form = TaskForm(
         request.POST if request.method == "POST" else None,
         project=project,
@@ -121,7 +165,7 @@ def task_create(request, project_pk):
     if request.method == "POST" and form.is_valid():
         _append_position(task)
         task.save()
-        return _saved(request, project, task.pk)
+        return _saved(request, project, task.pk, created=True)
     return _render_task(
         request,
         project,
@@ -130,7 +174,7 @@ def task_create(request, project_pk):
         task=task,
         heading="New task",
         submit_label="Create task",
-        form_action=reverse("tasks:create", args=[project.pk]),
+        form_action=_task_url(request, "tasks:create", project.pk),
     )
 
 
@@ -170,7 +214,12 @@ def task_edit(request, project_pk, pk):
         if task.status != previous_status:
             _append_position(task)
         task.save()
-        return _saved(request, project, task.pk)
+        return _saved(
+            request,
+            project,
+            task.pk,
+            status=task.status if task.status != previous_status else None,
+        )
     return _edit_response(request, project, task, form)
 
 
@@ -191,7 +240,7 @@ def task_delete(request, project_pk, pk):
         "tasks/partials/confirm_delete.html",
         task=task,
         heading="Delete this task?",
-        form_action=reverse("tasks:delete", args=[project.pk, task.pk]),
+        form_action=_task_url(request, "tasks:delete", project.pk, task.pk),
     )
 
 
@@ -250,16 +299,14 @@ def task_move(request, project_pk, pk):
         request.headers.get("HX-Request") == "true"
         and request.headers.get("HX-Target") == "project-board"
     ):
-        response = render(
-            request,
-            "projects/partials/board.html",
-            _board_context(project, request.user),
-        )
+        context, template = _workspace(request, project)
+        response = render(request, template, context)
         response["HX-Trigger-After-Swap"] = json.dumps(
             {
                 "taskMoved": {
                     "task_id": task.pk,
-                    "message": (
+                    "message": f"Moved to {task.get_status_display()}",
+                    "announcement": (
                         f"Task moved to {task.get_status_display()}, "
                         f"position {task.position + 1}."
                     ),
@@ -268,4 +315,4 @@ def task_move(request, project_pk, pk):
         )
         return response
     messages.success(request, "Task moved.")
-    return redirect("projects:detail", pk=project.pk)
+    return redirect(_return_url(request, project))

@@ -12,6 +12,7 @@
     <div class="app-content"><div class="request-error" id="workspace-request-error" role="alert" hidden><span>We couldn’t confirm that change. Refresh this page before trying again.</span><button type="button" data-dismiss-request-error aria-label="Dismiss error">&times;</button></div>{% if active_tab %}{% include "projects/partials/header.html" %}{% endif %}{% block workspace_content %}{% endblock %}</div>
   </main>
   <span class="task-live-status" id="task-live-status" role="status"></span>
+  <div class="toast workspace-toast" id="workspace-toast" role="status" hidden></div>
 </div>
 {% endblock %}
 {% block extra_scripts %}<script src="{% static 'js/workspace.js' %}" defer></script><script src="{% static 'js/board.js' %}" defer></script>{% endblock %}

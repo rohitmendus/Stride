@@ -128,9 +128,7 @@ class TaskViewTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertFalse(Task.objects.filter(pk=task.pk).exists())
                 self.assertContains(response, "0 tasks")
-                self.assertIn(
-                    "Task deleted.", response.headers["HX-Trigger-After-Swap"]
-                )
+                self.assertIn("Task deleted", response.headers["HX-Trigger-After-Swap"])
 
     def test_unrelated_members_can_read_but_cannot_manage_and_ids_stay_scoped(self):
         task = Task.objects.create(

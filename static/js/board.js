@@ -1,36 +1,44 @@
 (() => {
-  if (window.strideBoardEvents || !window.Sortable || !window.htmx) return;
+  if (window.strideBoardEvents || !window.htmx) return;
   window.strideBoardEvents = true;
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let pendingMove = null;
+  let projectId = null;
+  let filtersOpen = false;
+  let viewFocus = null;
 
   const updateControls = () => {
     const board = document.getElementById("project-board");
     if (!board) return;
     const disabled = Boolean(pendingMove || board.dataset.moveFailed);
     board.querySelectorAll(".workspace-column-cards").forEach((list) => {
-      Sortable.get(list)?.option("disabled", disabled);
+      window.Sortable?.get(list)?.option("disabled", disabled);
     });
-    board.querySelectorAll("[data-move-task]").forEach((handle) => {
-      handle.setAttribute("aria-disabled", String(disabled));
+    board.querySelectorAll("[data-move-task]").forEach((card) => {
+      card.dataset.moveDisabled = String(disabled);
+    });
+    board.querySelectorAll("#task-filters input, #task-filters select, #task-filters button").forEach((input) => {
+      input.disabled = Boolean(pendingMove);
     });
   };
 
-  const moveTask = async (handle, status, beforeId = "") => {
-    const board = handle.closest("#project-board");
+  const moveTask = async (card, status, beforeId = "") => {
+    const board = card?.closest("#project-board");
     if (!board?.isConnected || pendingMove || board.dataset.moveFailed) return;
-    pendingMove = handle;
+    pendingMove = card;
     board.classList.add("is-saving");
     board.setAttribute("aria-busy", "true");
     updateControls();
     document.getElementById("task-live-status").textContent = "Saving task position…";
+    const saveStatus = document.getElementById("save-status");
+    if (saveStatus) saveStatus.textContent = "Saving…";
     try {
-      await htmx.ajax("POST", handle.dataset.moveUrl, {
-        source: handle, target: board, swap: "outerHTML", push: false,
+      await htmx.ajax("POST", card.dataset.moveUrl, {
+        source: card, target: board, swap: "outerHTML", push: false,
         values: {status, before_id: beforeId},
       });
     } catch {
-      // HTMX error events display the refresh notice; never retry an uncertain write.
+      // Failed writes are reported by HTMX events and are never retried automatically.
     } finally {
       pendingMove = null;
       board.classList.remove("is-saving");
@@ -42,12 +50,28 @@
   const initBoard = () => {
     const board = document.getElementById("project-board");
     if (!board) return;
-    board.querySelectorAll("[data-move-task], #board-move-help").forEach((el) => { el.hidden = false; });
-    board.querySelectorAll(".workspace-column-cards").forEach((list) => {
+    const form = board.querySelector("#task-filters");
+    const hasFilters = Boolean(form?.elements.priority?.value || form?.elements.assignee?.value);
+    if (projectId !== board.dataset.projectId) {
+      projectId = board.dataset.projectId;
+      filtersOpen = hasFilters;
+    }
+    if (hasFilters) filtersOpen = true;
+    const filters = board.querySelector("#filters");
+    if (filters) filters.hidden = !filtersOpen;
+    const toggle = board.querySelector("[data-filter-toggle]");
+    if (toggle) {
+      toggle.hidden = false;
+      toggle.setAttribute("aria-expanded", String(filtersOpen));
+    }
+    document.querySelectorAll("[data-my-task-count]").forEach((count) => { count.textContent = board.dataset.myCount; });
+
+    if (window.Sortable) board.querySelectorAll(".workspace-column-cards").forEach((list) => {
       if (Sortable.get(list)) return;
       let origin;
       Sortable.create(list, {
-        group: "stride-tasks", draggable: ".workspace-task", handle: ".task-drag-handle",
+        group: "stride-tasks", draggable: ".workspace-task",
+        filter: ".workspace-task:not([data-move-task])", preventOnFilter: false,
         animation: motion.matches ? 0 : 160, direction: "vertical",
         ghostClass: "task-drag-ghost", chosenClass: "task-drag-chosen",
         delay: 180, delayOnTouchOnly: true, touchStartThreshold: 4,
@@ -59,10 +83,9 @@
           const next = event.item.nextElementSibling;
           const beforeId = next?.matches(".workspace-task") ? next.dataset.taskId : "";
           const changed = event.from !== event.to || event.oldDraggableIndex !== event.newDraggableIndex;
-          // Restore the last confirmed layout while the server saves the intended move.
-          origin.parent.insertBefore(event.item, origin.next);
+          origin.parent.insertBefore(event.item, origin.next?.parentNode === origin.parent ? origin.next : null);
           origin = null;
-          if (changed) moveTask(event.item.querySelector("[data-move-task]"), status, beforeId);
+          if (changed) moveTask(event.item, status, beforeId);
         },
       });
     });
@@ -70,34 +93,44 @@
   };
 
   const failedMove = (event) => {
-    const handle = event.detail.elt;
-    if (!handle?.matches("[data-move-task]")) return;
-    const board = handle.closest("#project-board");
+    const card = event.detail.elt;
+    if (!card?.matches("[data-move-task]")) return;
+    const board = card.closest("#project-board");
     if (board) board.dataset.moveFailed = "true";
     const notice = document.getElementById("workspace-request-error");
     if (notice) notice.hidden = false;
-    document.getElementById("task-live-status").textContent = "Move not confirmed. Refresh the board before trying again.";
-    handle.focus();
+    window.strideNotify?.("Could not save. Refresh the board and try again.", undefined, false);
+    card.focus();
     updateControls();
   };
   ["htmx:responseError", "htmx:sendError", "htmx:timeout"].forEach((name) => document.addEventListener(name, failedMove));
 
   document.addEventListener("keydown", (event) => {
-    const handle = event.target.closest("[data-move-task]");
-    if (!handle || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    const card = event.target.closest(".workspace-task");
+    if (card && event.key === " " && event.target === card && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      card.click();
+    }
+    if (event.key === "/" && !event.altKey && !event.ctrlKey && !event.metaKey &&
+        !event.target.closest("input, textarea, select, [contenteditable='true']") &&
+        !document.querySelector("dialog[open]")) {
+      const search = document.getElementById("search");
+      if (search) { event.preventDefault(); search.focus(); }
+    }
+    if (!card?.hasAttribute("data-move-task") || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
     event.preventDefault();
-    const card = handle.closest(".workspace-task");
     const column = card.closest("[data-task-status]");
+    if (!column) return;
     const cards = Array.from(column.querySelectorAll(".workspace-task"));
     const index = cards.indexOf(card);
     if (event.key === "ArrowUp" && index > 0) {
-      moveTask(handle, column.dataset.taskStatus, cards[index - 1].dataset.taskId);
+      moveTask(card, column.dataset.taskStatus, cards[index - 1].dataset.taskId);
     } else if (event.key === "ArrowDown" && index < cards.length - 1) {
-      moveTask(handle, column.dataset.taskStatus, cards[index + 2]?.dataset.taskId || "");
+      moveTask(card, column.dataset.taskStatus, cards[index + 2]?.dataset.taskId || "");
     } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       const destination = event.key === "ArrowLeft" ? column.previousElementSibling : column.nextElementSibling;
-      if (destination?.matches("[data-task-status]")) moveTask(handle, destination.dataset.taskStatus);
+      if (destination?.matches("[data-task-status]")) moveTask(card, destination.dataset.taskStatus);
     }
   });
   document.addEventListener("click", (event) => {
@@ -106,21 +139,37 @@
       event.stopImmediatePropagation();
     }
   }, true);
+  document.addEventListener("click", (event) => {
+    const toggle = event.target.closest("[data-filter-toggle]");
+    if (!toggle) return;
+    filtersOpen = !filtersOpen;
+    document.getElementById("filters").hidden = !filtersOpen;
+    toggle.setAttribute("aria-expanded", String(filtersOpen));
+  });
+  document.addEventListener("htmx:beforeRequest", (event) => {
+    viewFocus = event.detail.elt.dataset.view || null;
+  });
   document.addEventListener("taskMoved", (event) => {
     initBoard();
-    document.querySelector(`[data-move-task="${Number(event.detail.task_id)}"]`)?.focus();
-    document.getElementById("task-live-status").textContent = event.detail.message;
+    document.querySelector(`[data-task-id="${Number(event.detail.task_id)}"]`)?.focus();
   });
-  document.addEventListener("htmx:afterSettle", initBoard);
+  document.addEventListener("taskSaved", initBoard);
+  document.addEventListener("htmx:afterSettle", (event) => {
+    initBoard();
+    if (viewFocus && event.detail.target?.id === "project-board") {
+      document.querySelector(`#project-board [data-view="${viewFocus}"]`)?.focus({preventScroll: true});
+      viewFocus = null;
+    }
+  });
   document.addEventListener("htmx:beforeSwap", (event) => {
     if (pendingMove && event.detail.target === document.body) htmx.trigger(pendingMove, "htmx:abort");
   });
   document.addEventListener("htmx:beforeCleanupElement", (event) => {
-    if (event.detail.elt.matches?.(".workspace-column-cards")) Sortable.get(event.detail.elt)?.destroy();
+    if (event.detail.elt.matches?.(".workspace-column-cards")) window.Sortable?.get(event.detail.elt)?.destroy();
   });
   motion.addEventListener("change", () => {
     document.querySelectorAll(".workspace-column-cards").forEach((list) => {
-      Sortable.get(list)?.option("animation", motion.matches ? 0 : 160);
+      window.Sortable?.get(list)?.option("animation", motion.matches ? 0 : 160);
     });
   });
   initBoard();
